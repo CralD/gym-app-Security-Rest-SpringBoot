@@ -1,25 +1,27 @@
 package com.epam.gymappHibernate.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
+@Table(name = "USERS")
 @Getter
 @Setter
 public class User {
 
+    @Id
+    @GeneratedValue(strategy= GenerationType.AUTO)
+    private Long id;
     private String firstName;
     private String lastName;
     private String userName;
     private String password;
-    @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private Long id;
     private boolean isActive;
+
+    @OneToOne
+
+    private  Trainee trainee;
 
     public User(String firstName, String lastName, String userName, String password, Long id, boolean isActive) {
         this.firstName = firstName;
