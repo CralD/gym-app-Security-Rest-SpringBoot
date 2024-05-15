@@ -13,25 +13,37 @@ public class Training {
 
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID")
     private Long trainingId;
+    @Column(name = "TRAININGNAME", nullable = false)
     private String trainingName;
+    @Column(name = "TRAININGTYPEID")
     private String trainingType;
+    @Column(name = "TRAININGDATE", nullable = false)
     private LocalDate trainingDate;
+    @Column(name = "TRAININGDURATION", nullable = false)
     private  int trainingDuration;
 
-    private Long trainee;
+    @ManyToOne
+    @JoinColumn(name = "TRAINEEID", referencedColumnName = "ID")
+    private Trainee trainee;
 
-    private Long trainer;
+    @ManyToOne
+    @JoinColumn(name = "TRAINERID", referencedColumnName = "ID")
+    private Trainer trainer;
 
+    public Training() {
+
+    }
 
     public Training(String trainingName, String trainingType, LocalDate trainingDate, int trainingDuration, Trainee trainee, Trainer trainer) {
         this.trainingName = trainingName;
         this.trainingType = trainingType;
         this.trainingDate = trainingDate;
         this.trainingDuration = trainingDuration;
-        this.trainee = trainee.getTraineeID();
-        this.trainer = trainer.getTrainerId();
+        this.trainee = trainee;
+        this.trainer = trainer;
     }
 
 

@@ -14,8 +14,10 @@ public class TrainingType {
 
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID")
     private Long trainingTypeId;
+    @Column(name = "TYPENAME")
     private String trainingTypeName;
 
     public TrainingType(String trainingTypeName) {

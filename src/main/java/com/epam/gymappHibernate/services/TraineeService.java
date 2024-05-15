@@ -1,59 +1,42 @@
 package com.epam.gymappHibernate.services;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.epam.gymappHibernate.dao.TraineeRepository;
+import com.epam.gymappHibernate.entity.Trainee;
+import com.epam.gymappHibernate.entity.User;
+import com.epam.gymappHibernate.util.PasswordGenerator;
+import com.epam.gymappHibernate.util.UsernameGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
+import java.util.List;
 import java.util.stream.Collectors;
 
 
 @Service
 public class TraineeService {
+    private final TraineeRepository traineeRepository;
 
-    private static final Logger logger = LoggerFactory.getLogger(TraineeService.class);
+    //private static final Logger logger = LoggerFactory.getLogger(TraineeService.class);
 
 
-  /*  public void getTraineeById(Long id) {
-        return
+    @Autowired
+    public TraineeService(TraineeRepository traineeRepository) {
+        this.traineeRepository = traineeRepository;
     }
 
-    public void saveTrainee() {
-
-        logger.info("Trainee saved with id: {}", id);
+    public void createTrainee(Trainee trainee) {
+        User user = trainee.getUser();
+        List<String> existingUsernames = getAllUsernames();
+        String username = UsernameGenerator.generateUsername(user.getFirstName(), user.getLastName(), existingUsernames);
+        user.setUserName(username);
+        String password = PasswordGenerator.generatePassword();
+        user.setPassword(password);
+        traineeRepository.saveTrainee(trainee);
     }
-
-    public void updateTrainee(Long id, Trainee trainee) {
-        String username = generateUsername(trainee.getFirstName(), trainee.getLastName());
-        String password = generatePassword();
-        trainee.setUserName(username);
-        trainee.setPassword(password);
-        traineeDao.update(id, trainee);
-        logger.info("Trainee updated with id: {}", id);
+    private List<String> getAllUsernames() {
+        return traineeRepository.findAll().stream()
+                .map(trainee -> trainee.getUser().getUserName())
+                .collect(Collectors.toList());
     }
-
-    public void deleteTrainee(Long id) {
-        traineeDao.delete(id);
-        logger.info("Trainee deleted with id: {}", id);
-    }
-    private String generateUsername(String firstName, String lastName) {
-        String baseUsername = firstName + "." + lastName;
-        String username = baseUsername;
-        int suffix = 1;
-        while (traineeDao.existByuserName(username)) {
-            username = baseUsername + suffix++;
-        }
-        return username;
-    }
-    private String generatePassword() {
-        SecureRandom random = new SecureRandom();
-        return random.ints(48, 122)
-                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
-                .mapToObj(i -> String.valueOf((char) i))
-                .limit(10)
-                .collect(Collectors.joining());
-    }
-*/
-
 }

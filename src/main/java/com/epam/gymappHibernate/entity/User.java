@@ -11,31 +11,24 @@ import lombok.Setter;
 public class User {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @Column(name = "ID")
     private Long id;
-    @Column(name = "FIRSTNAME")
+    @Column(name = "FIRSTNAME",nullable = false)
     private String firstName;
-    @Column(name = "LASTNAME")
+    @Column(name = "LASTNAME",nullable = false)
     private String lastName;
-    @Column(name = "USERNAME ")
+    @Column(name = "USERNAME ",nullable = false)
     private String userName;
-    @Column(name = "PASSWORD ")
+    @Column(name = "PASSWORD ",nullable = false)
     private String password;
-    @Column(name = "IS_ACTIVE")
+    @Column(name = "IS_ACTIVE",nullable = false)
     private boolean isActive;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Trainee trainee;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Trainer trainer;
+    public User() {
 
-    @OneToOne
-
-    private  Trainee trainee;
-
-    public User(String firstName, String lastName, String userName, String password, Long id, boolean isActive) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.userName = userName;
-        this.password = password;
-        this.id = id;
-        this.isActive = isActive;
     }
-
-
 }
