@@ -16,8 +16,6 @@ public class Trainer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
     private Long trainerId;
-    @Column(name = "SPECIALIZATION")
-    private String specialization;
     @OneToOne
     @JoinColumn(name = "USERID", referencedColumnName = "ID")
     private User user;
@@ -25,6 +23,9 @@ public class Trainer {
     private List<Training> trainings;
     @ManyToMany(mappedBy = "trainers")
     private Set<Trainee> trainees;
+    @ManyToOne
+    @JoinColumn(name ="SPECIALIZATION",referencedColumnName = "ID")
+    private TrainingType specialization;
 
     public Trainer() {
 

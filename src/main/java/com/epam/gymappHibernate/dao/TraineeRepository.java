@@ -5,6 +5,7 @@ package com.epam.gymappHibernate.dao;
 import com.epam.gymappHibernate.entity.Trainee;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Repository
 public class TraineeRepository {
+    @PersistenceContext
     private EntityManager entityManager;
 
     public TraineeRepository(EntityManager entityManager) {
@@ -42,7 +44,7 @@ public class TraineeRepository {
     public Trainee getTraineeByUsername(String username) {
         try {
             TypedQuery<Trainee> query = entityManager.createQuery(
-                    "SELECT t FROM Trainee t WHERE t.user.username = :username", Trainee.class
+                    "SELECT t FROM Trainee t WHERE t.user.userName = :username", Trainee.class
             );
             query.setParameter("username", username);
             return query.getSingleResult();

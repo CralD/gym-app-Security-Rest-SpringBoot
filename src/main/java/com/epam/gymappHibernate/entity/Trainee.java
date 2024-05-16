@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -18,7 +19,7 @@ public class Trainee {
     @Column(name = "ID")
     private Long traineeID;
     @Column(name = "DATEOFBIRTH")
-    private LocalDate DateOfBirth;
+    private Date DateOfBirth;
     @Column(name = "ADDRESS")
     private String Address;
     @OneToOne

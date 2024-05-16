@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Date;
+
 @Entity
 @Table(name = "TRAINING")
 @Getter
@@ -18,10 +20,11 @@ public class Training {
     private Long trainingId;
     @Column(name = "TRAININGNAME", nullable = false)
     private String trainingName;
-    @Column(name = "TRAININGTYPEID")
-    private String trainingType;
+    @ManyToOne
+    @JoinColumn(name ="TRAININGTYPEID",referencedColumnName = "ID")
+    private TrainingType trainingType;
     @Column(name = "TRAININGDATE", nullable = false)
-    private LocalDate trainingDate;
+    private Date trainingDate;
     @Column(name = "TRAININGDURATION", nullable = false)
     private  int trainingDuration;
 
@@ -36,17 +39,5 @@ public class Training {
     public Training() {
 
     }
-
-    public Training(String trainingName, String trainingType, LocalDate trainingDate, int trainingDuration, Trainee trainee, Trainer trainer) {
-        this.trainingName = trainingName;
-        this.trainingType = trainingType;
-        this.trainingDate = trainingDate;
-        this.trainingDuration = trainingDuration;
-        this.trainee = trainee;
-        this.trainer = trainer;
-    }
-
-
-
 
 }
