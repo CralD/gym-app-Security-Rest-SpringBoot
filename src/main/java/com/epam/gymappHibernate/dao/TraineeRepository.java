@@ -22,8 +22,9 @@ public class TraineeRepository {
     public void saveTrainee(Trainee trainee){
         entityManager.persist(trainee);
     }
+    @Transactional
     public void updateTrainee(Trainee trainee){
-        entityManager.flush();
+        entityManager.merge(trainee);
     }
     @Transactional
     public void deleteTraineeByUsername(String username) {
