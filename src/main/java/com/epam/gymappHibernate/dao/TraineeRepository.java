@@ -32,11 +32,12 @@ public class TraineeRepository {
     public void deleteTraineeByUsername(String username) {
         try {
             TypedQuery<Trainee> query = entityManager.createQuery(
-                    "SELECT t FROM Trainee t WHERE t.user.username = :username", Trainee.class
+                    "SELECT t FROM Trainee t WHERE t.user.userName = :username", Trainee.class
             );
             query.setParameter("username", username);
             Trainee trainee = query.getSingleResult();
             entityManager.remove(trainee);
+            entityManager.flush();
         } catch (NoResultException e) {
             // Handle exception: trainee not found
         }
