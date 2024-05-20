@@ -1,57 +1,108 @@
 package com.epam.gymappHibernate.services;
 
+import com.epam.gymappHibernate.dao.TraineeRepository;
+import com.epam.gymappHibernate.dao.TrainerRepository;
+import com.epam.gymappHibernate.dao.UserRepository;
+import com.epam.gymappHibernate.entity.Trainee;
+import com.epam.gymappHibernate.entity.Trainer;
+import com.epam.gymappHibernate.util.PasswordGenerator;
+import com.epam.gymappHibernate.util.UsernameGenerator;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class TrainerService {
-   /* private Storage<Trainer> trainerDao;
-    private static final Logger logger = LoggerFactory.getLogger(TrainerService.class);
-
     @Autowired
-    public TrainerService(Storage<Trainer> trainerDao) {
-        this.trainerDao = trainerDao;
+    private final TrainerRepository trainerRepository;
+    @Autowired
+    private final UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(TraineeService.class);
+    @Autowired
+    public TrainerService(TrainerRepository trainerRepository, UserRepository userRepository) {
+        this.trainerRepository = trainerRepository;
+        this.userRepository = userRepository;
     }
+    @Transactional
+    public void createTrainer(Trainer trainer) {
 
-    public Trainer getTrainerById(Long id) {
-        return trainerDao.getById(id);
+        List<String> existingUsernames = userRepository.getAllUsers();
+        String username = UsernameGenerator.generateUsername(trainer.getUser().getFirstName(), trainer.getUser().getLastName(), existingUsernames);
+        trainer.getUser().setUserName(username);
+        String password = PasswordGenerator.generatePassword();
+        trainer.getUser().setPassword(password);
+        trainerRepository.saveTrainer(trainer);
+        logger.info("Trainer created: {} ", username);
     }
-
-    public void saveTrainer(Long id, Trainer trainer) {
-        String username = generateUsername(trainer.getFirstName(), trainer.getLastName());
-        String password = generatePassword();
-        trainer.setUserName(username);
-        trainer.setPassword(password);
-        trainerDao.save(id, trainer);
-        logger.info("Trainer saved with id: {}", id);
-    }
-
-    public void updateTrainer(Long id, Trainer trainer) {
-        trainerDao.update(id, trainer);
-        logger.info("Trainer updated with id: {}", id);
-    }
-
-    private String generateUsername(String firstName, String lastName) {
-        String baseUsername = firstName + "." + lastName;
-        String username = baseUsername;
-        int suffix = 1;
-        while (trainerDao.existByuserName(username)) {
-            username = baseUsername + suffix++;
+    public boolean authenticate(String username, String password) {
+        Trainer trainer = trainerRepository.getTrainerByUsername(username);
+        if (trainer != null && trainer.getUser().getPassword().equals(password)) {
+            logger.info("Authentication successful for user: {}", username);
+            return true;
+        } else {
+            logger.warn("Authentication failed for user: {}", username);
+            return false;
         }
-        return username;
     }
-    private String generatePassword() {
-        SecureRandom random = new SecureRandom();
-        return random.ints(48, 122)
-                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
-                .mapToObj(i -> String.valueOf((char) i))
-                .limit(10)
-                .collect(Collectors.joining());
-    }*/
+    public Trainer getTrainerByUsername(String username,String password){
+        if (authenticate(username,password)) {
+            logger.info("Selecting Trainer profile: {}", username);
+            return trainerRepository.getTrainerByUsername(username);
+
+        }else {
+            logger.error("Invalid username or password for trainer {}", username);
+            throw  new SecurityException("Invalid username or password");
+        }
+    }
+    @Transactional
+    public void updateTrainerProfile(String username, String password, Trainer trainer) {
+        if (authenticate(username, password)) {
+            logger.info("Updating Trainer profile: {}", username);
+            trainerRepository.updateTrainer(trainer);
+        } else {
+            logger.error("Invalid username or password for trainer {}", username);
+            throw new SecurityException("Invalid username or password");
+        }
+    }
+
+    @Transactional
+    public void changeTrainerPassword(String username, String newPassword, String password) {
+        if (authenticate(username, password)) {
+            Trainer trainer = trainerRepository.getTrainerByUsername(username);
+            if (trainer != null) {
+                logger.info("Changing Password");
+                trainer.getUser().setPassword(newPassword);
+                trainerRepository.updateTrainer(trainer);
+            }
+        }else {
+            logger.error("Invalid username or password for trainer {}", username);
+            throw new SecurityException("Invalid username or password");
+        }
+    }
+    @Transactional
+    public void setTrainerActiveStatus(String username, String password, boolean isActive) {
+        logger.info("Setting active status for trainer: {}", username);
+        if (authenticate(username, password)) {
+            Trainer trainer = trainerRepository.getTrainerByUsername(username);
+            if (trainer != null) {
+                trainer.getUser().setActive(isActive);
+                trainerRepository.updateTrainer(trainer);
+                logger.info("Active status for trainer {} set to {}", username, isActive);
+            } else {
+                logger.warn("Trainer {} not found", username);
+            }
+        } else {
+            logger.error("Invalid username or password for trainer {}", username);
+            throw new SecurityException("Invalid username or password");
+        }
+    }
+
+
 
 }

@@ -15,7 +15,7 @@ import java.util.List;
 @Repository
 public class TraineeRepository {
     @PersistenceContext
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     public TraineeRepository(EntityManager entityManager) {
         this.entityManager = entityManager;

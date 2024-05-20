@@ -17,8 +17,14 @@ public class TrainingRepository {
     @PersistenceContext
     private EntityManager entityManager;
 
+
+    public TrainingRepository(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
     @Transactional
     public void saveTraining(Training training){
+
         entityManager.persist(training);
     }
     public List<Training> getTraineeTrainings(String username, Date fromDate, Date toDate, String trainerName, String trainingType){

@@ -3,6 +3,7 @@ package com.epam.gymappHibernate.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.Date;
@@ -24,6 +25,7 @@ public class Training {
     @JoinColumn(name ="TRAININGTYPEID",referencedColumnName = "ID")
     private TrainingType trainingType;
     @Column(name = "TRAININGDATE", nullable = false)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss.S")
     private Date trainingDate;
     @Column(name = "TRAININGDURATION", nullable = false)
     private  int trainingDuration;
