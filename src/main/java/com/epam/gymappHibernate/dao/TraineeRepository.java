@@ -2,11 +2,14 @@ package com.epam.gymappHibernate.dao;
 
 
 import com.epam.gymappHibernate.entity.Trainee;
+import com.epam.gymappHibernate.services.TraineeService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,6 +18,7 @@ import java.util.List;
 public class TraineeRepository {
     @PersistenceContext
     private final EntityManager entityManager;
+    private static final Logger logger = LoggerFactory.getLogger(TraineeRepository.class);
 
     public TraineeRepository(EntityManager entityManager) {
         this.entityManager = entityManager;
@@ -41,7 +45,7 @@ public class TraineeRepository {
             entityManager.remove(trainee);
             entityManager.flush();
         } catch (NoResultException e) {
-
+            logger.error("No trainee found with username: {}", username, e);
         }
     }
 
