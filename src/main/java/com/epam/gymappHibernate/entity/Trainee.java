@@ -25,7 +25,7 @@ public class Trainee {
     @OneToOne
     @JoinColumn(name = "USERID", referencedColumnName = "ID")
     private User user;
-    @OneToMany(mappedBy = "trainee")
+    @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Training> trainings;
     @ManyToMany
     @JoinTable(
