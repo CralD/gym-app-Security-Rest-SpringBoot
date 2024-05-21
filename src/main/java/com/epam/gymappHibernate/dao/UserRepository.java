@@ -16,6 +16,7 @@ import java.util.List;
 public class UserRepository {
     @PersistenceContext
     private EntityManager entityManager;
+
     @Transactional
     public void saveUser(User user) {
         entityManager.persist(user);
@@ -33,7 +34,7 @@ public class UserRepository {
             query.setParameter("username", username);
             return query.getSingleResult();
         } catch (NoResultException e) {
-            return null; // or throw a custom exception if preferred
+            return null;
         }
     }
 

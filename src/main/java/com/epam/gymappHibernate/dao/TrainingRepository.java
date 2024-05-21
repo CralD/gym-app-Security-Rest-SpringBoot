@@ -1,7 +1,6 @@
 package com.epam.gymappHibernate.dao;
 
 
-
 import com.epam.gymappHibernate.entity.Training;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -23,13 +22,14 @@ public class TrainingRepository {
     }
 
     @Transactional
-    public void saveTraining(Training training){
+    public void saveTraining(Training training) {
 
         entityManager.persist(training);
     }
-    public List<Training> getTraineeTrainings(String username, Date fromDate, Date toDate, String trainerName, String trainingType){
+
+    public List<Training> getTraineeTrainings(String username, Date fromDate, Date toDate, String trainerName, String trainingType) {
         String queryString = "SELECT t FROM Training t JOIN t.trainee trn JOIN t.trainer tr JOIN t.trainingType tt WHERE trn.user.userName = :username" +
-                " AND t.trainingDate >= :fromDate AND t.trainingDate <= :toDate AND tr.user.userName = :trainerName AND tt.type = :trainingType";
+                " AND t.trainingDate >= :fromDate AND t.trainingDate <= :toDate AND tr.user.firstName = :trainerName AND tt.trainingTypeName = :trainingType";
         TypedQuery<Training> query = entityManager.createQuery(queryString, Training.class);
         query.setParameter("username", username);
         query.setParameter("fromDate", fromDate);
@@ -38,7 +38,8 @@ public class TrainingRepository {
         query.setParameter("trainingType", trainingType);
         return query.getResultList();
     }
-    public List<Training> getTrainerTrainings(String username, Date fromDate, Date toDate, String traineeName){
+
+    public List<Training> getTrainerTrainings(String username, Date fromDate, Date toDate, String traineeName) {
         String queryString = "SELECT t FROM Training t JOIN t.trainer tr JOIN t.trainee trn WHERE tr.user.userName = :username" +
                 " AND t.trainingDate >= :fromDate AND t.trainingDate <= :toDate AND trn.user.firstName = :traineeName";
         TypedQuery<Training> query = entityManager.createQuery(queryString, Training.class);

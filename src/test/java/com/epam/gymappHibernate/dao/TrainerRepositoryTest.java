@@ -40,7 +40,6 @@ class TrainerRepositoryTest {
         @Test
         @Transactional
         public void testSaveAndFindTrainer(){
-            // Create and save a new user
             User user = new User();
             user.setFirstName("Enrique");
             user.setLastName("Ortega");
@@ -49,19 +48,15 @@ class TrainerRepositoryTest {
             user.setUserName("Enrique.Ortega");
             userRepository.saveUser(user);
 
-            // Create and save a new trainer
             Trainer trainer = new Trainer();
             trainer.setUser(user);
             trainerRepository.saveTrainer(trainer);
 
-            // Clear the persistence context to force a database call when we try to fetch the Trainer again
             entityManager.flush();
             entityManager.clear();
 
-            // Fetch the saved trainer from the database
             Trainer savedTrainer = trainerRepository.getTrainerByUsername("Enrique.Ortega");
 
-            // Assert that the trainer was saved correctly
             assertNotNull(savedTrainer);
             assertEquals("Enrique.Ortega", savedTrainer.getUser().getUserName());
         }
@@ -69,7 +64,6 @@ class TrainerRepositoryTest {
         @Test
         @Transactional
         public void testUpdateTrainer() {
-            // Create and save a new user
             User user = new User();
             user.setFirstName("john");
             user.setLastName("doe");
@@ -78,12 +72,10 @@ class TrainerRepositoryTest {
             user.setUserName("john.doe");
             userRepository.saveUser(user);
 
-            // Create and save a new trainer
             Trainer trainer = new Trainer();
             trainer.setUser(user);
             trainerRepository.saveTrainer(trainer);
 
-            // Update the trainer's user
             User updatedUser = new User();
             updatedUser.setFirstName("jane");
             updatedUser.setLastName("doe");
@@ -94,26 +86,18 @@ class TrainerRepositoryTest {
             trainer.setUser(updatedUser);
             trainerRepository.updateTrainer(trainer);
 
-            // Clear the persistence context to force a database call when we try to fetch the Trainer again
             entityManager.flush();
             entityManager.clear();
 
-            // Fetch the updated trainer from the database
             Trainer updatedTrainer = trainerRepository.getTrainerByUsername("jane.doe");
 
-            // Assert that the trainer's user was updated correctly
             assertNotNull(updatedTrainer);
             assertEquals("jane.doe", updatedTrainer.getUser().getUserName());
         }
     @Test
     public void testFindAll() {
-
-
         when(entityManager.createQuery("SELECT t FROM Trainer t", Trainer.class)).thenReturn(query);
-
-
         List<Trainer> result = trainerRepository.findAll();
-
         assertEquals(4, result.size());
 
     }

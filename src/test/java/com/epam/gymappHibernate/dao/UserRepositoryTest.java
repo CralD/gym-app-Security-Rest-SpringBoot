@@ -61,14 +61,8 @@ class UserRepositoryTest {
         user.setPassword("asd456");
         user.setActive(true);
         user.setUserName("pedro.garcia");
-
         userRepository.saveUser(user);
-
-
-
         User savedUser = userRepository.getUserByUsername(user.getUserName());
-
-
         assertEquals("pedro.garcia", savedUser.getUserName());
     }
 
@@ -76,11 +70,8 @@ class UserRepositoryTest {
     @Transactional
     public void testGetAllUsers() {
         List<String> users = userRepository.getAllUsers();
-
         assertNotNull(users);
         assertFalse(users.isEmpty());
-
-
         assertEquals(11, users.size());
     }
 
@@ -88,9 +79,7 @@ class UserRepositoryTest {
     @Transactional
     public void testDeleteUser() {
         Long userId = 1L;
-
         userRepository.deleteUser(userId);
-
         User user = userRepository.getUserById(userId);
         assertNull(user);
     }

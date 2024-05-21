@@ -1,5 +1,7 @@
 package com.epam.gymappHibernate.util;
+
 import java.security.SecureRandom;
+
 public class PasswordGenerator {
 
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

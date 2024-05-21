@@ -1,7 +1,6 @@
 package com.epam.gymappHibernate.dao;
 
 
-
 import com.epam.gymappHibernate.entity.Trainee;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -20,14 +19,17 @@ public class TraineeRepository {
     public TraineeRepository(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
+
     @Transactional
-    public void saveTrainee(Trainee trainee){
+    public void saveTrainee(Trainee trainee) {
         entityManager.persist(trainee);
     }
+
     @Transactional
-    public void updateTrainee(Trainee trainee){
+    public void updateTrainee(Trainee trainee) {
         entityManager.merge(trainee);
     }
+
     @Transactional
     public void deleteTraineeByUsername(String username) {
         try {
@@ -39,9 +41,10 @@ public class TraineeRepository {
             entityManager.remove(trainee);
             entityManager.flush();
         } catch (NoResultException e) {
-            // Handle exception: trainee not found
+
         }
     }
+
     public Trainee getTraineeByUsername(String username) {
         try {
             TypedQuery<Trainee> query = entityManager.createQuery(
@@ -50,9 +53,10 @@ public class TraineeRepository {
             query.setParameter("username", username);
             return query.getSingleResult();
         } catch (NoResultException e) {
-            return null; // or throw a custom exception if preferred
+            return null;
         }
     }
+
     public List<Trainee> findAll() {
         TypedQuery<Trainee> query = entityManager.createQuery("SELECT t FROM Trainee t", Trainee.class);
         return query.getResultList();

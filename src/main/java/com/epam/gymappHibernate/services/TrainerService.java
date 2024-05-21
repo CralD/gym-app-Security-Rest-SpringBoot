@@ -24,11 +24,13 @@ public class TrainerService {
     @Autowired
     private final UserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(TraineeService.class);
+
     @Autowired
     public TrainerService(TrainerRepository trainerRepository, UserRepository userRepository) {
         this.trainerRepository = trainerRepository;
         this.userRepository = userRepository;
     }
+
     @Transactional
     public void createTrainer(Trainer trainer) {
 
@@ -40,6 +42,7 @@ public class TrainerService {
         trainerRepository.saveTrainer(trainer);
         logger.info("Trainer created: {} ", username);
     }
+
     public boolean authenticate(String username, String password) {
         Trainer trainer = trainerRepository.getTrainerByUsername(username);
         if (trainer != null && trainer.getUser().getPassword().equals(password)) {
@@ -50,16 +53,18 @@ public class TrainerService {
             return false;
         }
     }
-    public Trainer getTrainerByUsername(String username,String password){
-        if (authenticate(username,password)) {
+
+    public Trainer getTrainerByUsername(String username, String password) {
+        if (authenticate(username, password)) {
             logger.info("Selecting Trainer profile: {}", username);
             return trainerRepository.getTrainerByUsername(username);
 
-        }else {
+        } else {
             logger.error("Invalid username or password for trainer {}", username);
-            throw  new SecurityException("Invalid username or password");
+            throw new SecurityException("Invalid username or password");
         }
     }
+
     @Transactional
     public void updateTrainerProfile(String username, String password, Trainer trainer) {
         if (authenticate(username, password)) {
@@ -80,11 +85,12 @@ public class TrainerService {
                 trainer.getUser().setPassword(newPassword);
                 trainerRepository.updateTrainer(trainer);
             }
-        }else {
+        } else {
             logger.error("Invalid username or password for trainer {}", username);
             throw new SecurityException("Invalid username or password");
         }
     }
+
     @Transactional
     public void setTrainerActiveStatus(String username, String password, boolean isActive) {
         logger.info("Setting active status for trainer: {}", username);
@@ -103,6 +109,10 @@ public class TrainerService {
         }
     }
 
+    public List<Trainer> findUnassignedTrainers(String traineeUsername) {
+        logger.info("Fetching unassigned trainers for trainee: {}", traineeUsername);
+        return trainerRepository.findUnassignedTrainers(traineeUsername);
+    }
 
 
 }

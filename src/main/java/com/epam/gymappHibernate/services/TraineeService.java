@@ -28,10 +28,11 @@ public class TraineeService {
 
 
     @Autowired
-    public TraineeService(TraineeRepository traineeRepository,UserRepository userRepository) {
+    public TraineeService(TraineeRepository traineeRepository, UserRepository userRepository) {
         this.traineeRepository = traineeRepository;
         this.userRepository = userRepository;
     }
+
     @Transactional
     public void createTrainee(Trainee trainee) {
 
@@ -56,26 +57,26 @@ public class TraineeService {
     }
 
     @Transactional
-    public void deleteTrainee(String username,String password){
-        if (authenticate(username,password)) {
-        traineeRepository.deleteTraineeByUsername(username);
+    public void deleteTrainee(String username, String password) {
+        if (authenticate(username, password)) {
+            traineeRepository.deleteTraineeByUsername(username);
             logger.info("Deleted trainee: {}", username);
-        }else {
+        } else {
             logger.error("Invalid username or password for trainee {}", username);
-            throw  new SecurityException("Invalid username or password");
+            throw new SecurityException("Invalid username or password");
         }
 
     }
 
 
-    public Trainee getTraineeByUsername(String username,String password){
-        if (authenticate(username,password)) {
+    public Trainee getTraineeByUsername(String username, String password) {
+        if (authenticate(username, password)) {
             logger.info("Selecting Trainee profile: {}", username);
             return traineeRepository.getTraineeByUsername(username);
 
-        }else {
+        } else {
             logger.error("Invalid username or password for trainee {}", username);
-            throw  new SecurityException("Invalid username or password");
+            throw new SecurityException("Invalid username or password");
         }
     }
 
@@ -89,20 +90,22 @@ public class TraineeService {
             throw new SecurityException("Invalid username or password");
         }
     }
+
     @Transactional
     public void changeTraineePassword(String username, String newPassword, String password) {
         if (authenticate(username, password)) {
             Trainee trainee = traineeRepository.getTraineeByUsername(username);
-        if (trainee != null) {
-            logger.info("Changing Password");
-            trainee.getUser().setPassword(newPassword);
-            traineeRepository.updateTrainee(trainee);
-        }
-        }else {
+            if (trainee != null) {
+                logger.info("Changing Password");
+                trainee.getUser().setPassword(newPassword);
+                traineeRepository.updateTrainee(trainee);
+            }
+        } else {
             logger.error("Invalid username or password for trainee {}", username);
             throw new SecurityException("Invalid username or password");
         }
     }
+
     @Transactional
     public void setTraineeActiveStatus(String username, String password, boolean isActive) {
         logger.info("Setting active status for trainee: {}", username);

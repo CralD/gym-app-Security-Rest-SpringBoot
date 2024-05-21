@@ -38,19 +38,13 @@ class TrainingServiceTest {
 
     @Test
     public void testSaveTraining() {
-        // Arrange
         doNothing().when(trainingRepository).saveTraining(any(Training.class));
-
-        // Act
         trainingService.saveTraining(training);
-
-        // Assert
         verify(trainingRepository, times(1)).saveTraining(training);
     }
 
     @Test
     public void testGetTraineeTrainings() {
-        // Arrange
         String username = "johndoe";
         Date fromDate = new Date();
         Date toDate = new Date();
@@ -60,10 +54,7 @@ class TrainingServiceTest {
         when(trainingRepository.getTraineeTrainings(username, fromDate, toDate, trainerName, trainingType))
                 .thenReturn(Collections.singletonList(training));
 
-        // Act
         List<Training> result = trainingService.getTraineeTrainings(username, fromDate, toDate, trainerName, trainingType);
-
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(training, result.get(0));
@@ -71,7 +62,6 @@ class TrainingServiceTest {
 
     @Test
     public void testGetTrainerTrainings() {
-        // Arrange
         String username = "trainer";
         Date fromDate = new Date();
         Date toDate = new Date();
@@ -80,10 +70,7 @@ class TrainingServiceTest {
         when(trainingRepository.getTrainerTrainings(username, fromDate, toDate, traineeName))
                 .thenReturn(Collections.singletonList(training));
 
-        // Act
         List<Training> result = trainingService.getTrainerTrainings(username, fromDate, toDate, traineeName);
-
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(training, result.get(0));

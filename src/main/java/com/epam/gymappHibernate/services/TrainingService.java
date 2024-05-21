@@ -18,6 +18,7 @@ public class TrainingService {
     private TrainingRepository trainingRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(TrainingService.class);
+
     @Autowired
     public TrainingService(TrainingRepository trainingRepository) {
         this.trainingRepository = trainingRepository;

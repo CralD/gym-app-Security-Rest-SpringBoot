@@ -24,7 +24,7 @@ public class Trainer {
     @ManyToMany(mappedBy = "trainers")
     private Set<Trainee> trainees;
     @ManyToOne
-    @JoinColumn(name ="SPECIALIZATION",referencedColumnName = "ID")
+    @JoinColumn(name = "SPECIALIZATION", referencedColumnName = "ID")
     private TrainingType specialization;
 
     public Trainer() {

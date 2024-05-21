@@ -22,13 +22,13 @@ public class Training {
     @Column(name = "TRAININGNAME", nullable = false)
     private String trainingName;
     @ManyToOne
-    @JoinColumn(name ="TRAININGTYPEID",referencedColumnName = "ID")
+    @JoinColumn(name = "TRAININGTYPEID", referencedColumnName = "ID")
     private TrainingType trainingType;
     @Column(name = "TRAININGDATE", nullable = false)
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss.S")
     private Date trainingDate;
     @Column(name = "TRAININGDURATION", nullable = false)
-    private  int trainingDuration;
+    private int trainingDuration;
 
     @ManyToOne
     @JoinColumn(name = "TRAINEEID", referencedColumnName = "ID")
@@ -42,4 +42,12 @@ public class Training {
 
     }
 
+    public Training(String trainingName, TrainingType trainingType, Date trainingDate, int trainingDuration, Trainee trainee, Trainer trainer) {
+        this.trainingName = trainingName;
+        this.trainingType = trainingType;
+        this.trainingDate = trainingDate;
+        this.trainingDuration = trainingDuration;
+        this.trainee = trainee;
+        this.trainer = trainer;
+    }
 }

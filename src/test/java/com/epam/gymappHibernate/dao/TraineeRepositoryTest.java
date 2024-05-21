@@ -53,21 +53,16 @@ class TraineeRepositoryTest {
         user.setPassword("password");
         user.setActive(true);
 
-
         userRepository.saveUser(user);
-
 
         Trainee trainee = new Trainee();
         trainee.setDateOfBirth(new Date());
         trainee.setAddress("123 Test St");
         trainee.setUser(user);
 
-
         traineeRepository.saveTrainee(trainee);
 
-
         Trainee savedTrainee = traineeRepository.getTraineeByUsername(user.getUserName());
-
 
         assertNotNull(savedTrainee);
         assertEquals(trainee.getTraineeID(), savedTrainee.getTraineeID());
@@ -87,24 +82,19 @@ class TraineeRepositoryTest {
         user.setUserName("juan.enrique");
         userRepository.saveUser(user);
 
-
         Trainee trainee = new Trainee();
         trainee.setDateOfBirth(new Date());
         trainee.setAddress("123 Test St");
         trainee.setUser(user);
         traineeRepository.saveTrainee(trainee);
 
-
         trainee.setAddress("456 New St");
         traineeRepository.updateTrainee(trainee);
-
 
         entityManager.flush();
         entityManager.clear();
 
-
         Trainee updatedTrainee = traineeRepository.getTraineeByUsername("juan.enrique");
-
 
         assertNotNull(updatedTrainee);
         assertEquals("456 New St", updatedTrainee.getAddress());
@@ -131,13 +121,10 @@ class TraineeRepositoryTest {
         traineeRepository.saveTrainee(trainee);
         traineeRepository.deleteTraineeByUsername("alicia.sanchez");
 
-
-
         entityManager.flush();
         entityManager.clear();
 
         Trainee deletedTrainee = traineeRepository.getTraineeByUsername("alicia.sanchez");
-
         assertNull(deletedTrainee);
     }
 
@@ -161,7 +148,6 @@ class TraineeRepositoryTest {
 
         traineeRepository.saveTrainee(trainee);
         Trainee savedTrainee = traineeRepository.getTraineeByUsername(user.getUserName());
-
         assertEquals("pedro", savedTrainee.getUser().getFirstName());
     }
 
@@ -169,12 +155,8 @@ class TraineeRepositoryTest {
     @Test
     public void testFindAll() {
 
-
         when(entityManager.createQuery("SELECT t FROM Trainee t", Trainee.class)).thenReturn(query);
-
-
         List<Trainee> result = traineeRepository.findAll();
-
         assertEquals(7, result.size());
 
     }

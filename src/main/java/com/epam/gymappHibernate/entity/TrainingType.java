@@ -13,8 +13,6 @@ import java.util.List;
 public class TrainingType {
 
 
-
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
@@ -23,7 +21,7 @@ public class TrainingType {
     private String trainingTypeName;
     @OneToMany(mappedBy = "trainingType")
     private List<Training> trainings;
-    @OneToMany(mappedBy ="specialization" )
+    @OneToMany(mappedBy = "specialization")
     private List<Trainer> trainers;
 
 

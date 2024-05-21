@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -45,112 +46,83 @@ class TrainerServiceTest {
 
     @Test
     public void testCreateTrainer() {
-        // Arrange
         when(userRepository.getAllUsers()).thenReturn(Collections.singletonList("existingUser"));
-
-        // Act
         trainerService.createTrainer(trainer);
-
-        // Assert
         assertNotNull(trainer.getUser().getUserName());
         assertNotNull(trainer.getUser().getPassword());
         verify(trainerRepository, times(1)).saveTrainer(trainer);
     }
+
     @Test
     public void testAuthenticateSuccess() {
-        // Arrange
         String username = "Pedro.Garcia";
         String password = "password";
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword(password);
-
-        // Act
         boolean result = trainerService.authenticate(username, password);
-
-        // Assert
         assertTrue(result);
     }
 
     @Test
     public void testAuthenticateFailure() {
-        // Arrange
         String username = "johndoe";
         String password = "wrongpassword";
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword("password");
-
-        // Act
         boolean result = trainerService.authenticate(username, password);
-
-        // Assert
         assertFalse(result);
     }
+
     @Test
     public void testAuthenticateUserNotFound() {
-        // Arrange
         String username = "unknown";
         String password = "password";
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(null);
-
-        // Act
         boolean result = trainerService.authenticate(username, password);
-
-        // Assert
         assertFalse(result);
     }
 
     @Test
     public void testGetTrainerByUsernameSuccess() {
-        // Arrange
+
         String username = "Pedro.Garcia";
         String password = "password";
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword(password);
-
-        // Act
         Trainer result = trainerService.getTrainerByUsername(username, password);
-
-        // Assert
         assertEquals(trainer, result);
     }
 
     @Test
     public void testGetTrainerByUsernameFailure() {
-        // Arrange
+
         String username = "johndoe";
         String password = "wrongpassword";
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword("password");
-
-        // Act & Assert
         assertThrows(SecurityException.class, () -> {
             trainerService.getTrainerByUsername(username, password);
         });
     }
+
     @Test
     public void testUpdateTrainerProfileSuccess() {
-        // Arrange
+
         String username = "Pedro.Garcia";
         String password = "password";
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword(password);
-
-        // Act
         trainerService.updateTrainerProfile(username, password, trainer);
-
-        // Assert
         verify(trainerRepository, times(1)).updateTrainer(trainer);
     }
 
     @Test
     public void testUpdateTrainerProfileFailure() {
-        // Arrange
+
         String username = "johndoe";
         String password = "wrongpassword";
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword("password");
-
-        // Act & Assert
         assertThrows(SecurityException.class, () -> {
             trainerService.updateTrainerProfile(username, password, trainer);
         });
@@ -158,65 +130,67 @@ class TrainerServiceTest {
 
     @Test
     public void testChangeTrainerPasswordSuccess() {
-        // Arrange
+
         String username = "Pedro.Garcia";
         String password = "password";
         String newPassword = "newpassword";
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword(password);
-
-        // Act
         trainerService.changeTrainerPassword(username, newPassword, password);
-
-        // Assert
         assertEquals(newPassword, trainer.getUser().getPassword());
         verify(trainerRepository, times(1)).updateTrainer(trainer);
     }
 
     @Test
     public void testChangeTrainerPasswordFailure() {
-        // Arrange
+
         String username = "johndoe";
         String newPassword = "newpassword";
         String password = "wrongpassword";
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword("password");
-
-        // Act & Assert
         assertThrows(SecurityException.class, () -> {
             trainerService.changeTrainerPassword(username, newPassword, password);
         });
     }
+
     @Test
     public void testSetTrainerActiveStatusSuccess() {
-        // Arrange
+
         String username = "Pedro.Garcia";
         String password = "password";
         boolean isActive = true;
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword(password);
-
-        // Act
         trainerService.setTrainerActiveStatus(username, password, isActive);
-
-        // Assert
         assertEquals(isActive, trainer.getUser().isActive());
         verify(trainerRepository, times(1)).updateTrainer(trainer);
     }
 
     @Test
     public void testSetTrainerActiveStatusFailure() {
-        // Arrange
+
         String username = "johndoe";
         String password = "wrongpassword";
         boolean isActive = true;
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword("password");
-
-        // Act & Assert
         assertThrows(SecurityException.class, () -> {
             trainerService.setTrainerActiveStatus(username, password, isActive);
         });
+    }
+
+    @Test
+    public void testFindUnassignedTrainers() {
+
+        String traineeUsername = "trainee1";
+        List<Trainer> unassignedTrainers = Collections.singletonList(trainer);
+        when(trainerRepository.findUnassignedTrainers(traineeUsername)).thenReturn(unassignedTrainers);
+        List<Trainer> result = trainerService.findUnassignedTrainers(traineeUsername);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(trainer, result.get(0));
+        verify(trainerRepository, times(1)).findUnassignedTrainers(traineeUsername);
     }
 
 }
