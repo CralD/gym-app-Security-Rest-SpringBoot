@@ -33,12 +33,19 @@ INSERT INTO TRAINER (SPECIALIZATION, USERID) VALUES (4,10);
 
 
 INSERT INTO TRAINING (TRAINEEID, TRAINERID, TRAININGNAME, TRAININGTYPEID, TRAININGDATE, TRAININGDURATION)
-VALUES (1, 1, 'Cardio Training', 2, '2024-05-15', 30.0),
+VALUES (1, 1, 'Cardio Training', 1, '2024-05-15', 30.0),
        (2, 2, 'Strength Training', 2, '2024-05-15', 40.0),
-       (3, 3, 'Flexibility Training', 2, '2024-05-16', 60.0),
-       (4, 4, 'Mobility Training', 2, '2024-05-24', 30.0),
-       (5, 1, 'Cardio Training', 2, '2024-05-17', 25.0),
-       (6, 3, 'Flexibility Training', 2, '2024-05-18', 40.0);
+       (3, 3, 'Flexibility Training', 3, '2024-05-16', 60.0),
+       (4, 4, 'Mobility Training', 4, '2024-05-24', 30.0),
+       (5, 1, 'Cardio Training', 1, '2024-05-17', 25.0),
+       (6, 3, 'Flexibility Training', 3, '2024-05-18', 40.0);
+
+INSERT INTO TRAINEE_TRAINER(TRAINEE_ID, TRAINER_ID) VALUES (1,1),
+(2,2),
+(3,3),
+(4,4),
+(5,1),
+(6,3);
 
 
 COMMIT;

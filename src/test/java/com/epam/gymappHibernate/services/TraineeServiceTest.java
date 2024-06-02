@@ -2,6 +2,7 @@ package com.epam.gymappHibernate.services;
 
 import com.epam.gymappHibernate.dao.TraineeRepository;
 import com.epam.gymappHibernate.dao.UserRepository;
+import com.epam.gymappHibernate.dto.TraineeDto;
 import com.epam.gymappHibernate.entity.Trainee;
 import com.epam.gymappHibernate.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,6 +35,8 @@ class TraineeServiceTest {
     private TraineeService traineeService;
 
     private Trainee trainee;
+
+    private TraineeDto traineeDto;
     private User user;
 
     @BeforeEach
@@ -131,9 +135,15 @@ class TraineeServiceTest {
 
         String username = "Pedro.Garcia";
         String password = "password";
+        TraineeDto traineeDto = new TraineeDto();
+        traineeDto.setFirstName("John");
+        traineeDto.setLastName("Doe");
+        traineeDto.setDateOfBirth(new Date());
+        traineeDto.setAddress("123 Main St");
+        traineeDto.setActive(true);
         when(traineeRepository.getTraineeByUsername(username)).thenReturn(trainee);
         trainee.getUser().setPassword(password);
-        traineeService.updateTraineeProfile(username, password, trainee);
+        traineeService.updateTraineeProfile(username, password, traineeDto);
         verify(traineeRepository, times(1)).updateTrainee(trainee);
     }
 
@@ -144,7 +154,7 @@ class TraineeServiceTest {
         when(traineeRepository.getTraineeByUsername(username)).thenReturn(trainee);
         trainee.getUser().setPassword("password");
         assertThrows(SecurityException.class, () -> {
-            traineeService.updateTraineeProfile(username, password, trainee);
+            traineeService.updateTraineeProfile(username, password, traineeDto);
         });
     }
 

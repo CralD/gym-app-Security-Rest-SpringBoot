@@ -27,7 +27,7 @@ public class Trainee {
     private User user;
     @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Training> trainings;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "TRAINEE_TRAINER",
             joinColumns = @JoinColumn(name = "TRAINEE_ID"),

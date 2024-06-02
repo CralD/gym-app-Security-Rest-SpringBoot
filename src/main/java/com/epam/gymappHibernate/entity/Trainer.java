@@ -23,7 +23,7 @@ public class Trainer {
     private List<Training> trainings;
     @ManyToMany(mappedBy = "trainers")
     private Set<Trainee> trainees;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "SPECIALIZATION", referencedColumnName = "ID")
     private TrainingType specialization;
 

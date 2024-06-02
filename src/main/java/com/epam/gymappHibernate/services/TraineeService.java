@@ -3,6 +3,8 @@ package com.epam.gymappHibernate.services;
 
 import com.epam.gymappHibernate.dao.TraineeRepository;
 import com.epam.gymappHibernate.dao.UserRepository;
+import com.epam.gymappHibernate.dto.TraineeDto;
+import com.epam.gymappHibernate.dto.TrainerDto;
 import com.epam.gymappHibernate.entity.Trainee;
 import com.epam.gymappHibernate.entity.User;
 import com.epam.gymappHibernate.util.PasswordGenerator;
@@ -36,11 +38,14 @@ public class TraineeService {
     @Transactional
     public void createTrainee(Trainee trainee) {
 
+
         List<String> existingUsernames = userRepository.getAllUsers();
         String username = UsernameGenerator.generateUsername(trainee.getUser().getFirstName(), trainee.getUser().getLastName(), existingUsernames);
         trainee.getUser().setUserName(username);
         String password = PasswordGenerator.generatePassword();
         trainee.getUser().setPassword(password);
+        User user = trainee.getUser();
+        userRepository.saveUser(user);
         traineeRepository.saveTrainee(trainee);
         logger.info("Trainee created: {} ", username);
     }
@@ -81,10 +86,26 @@ public class TraineeService {
     }
 
     @Transactional
-    public void updateTraineeProfile(String username, String password, Trainee trainee) {
+    public Trainee updateTraineeProfile(String username, String password, TraineeDto traineeDto) {
         if (authenticate(username, password)) {
             logger.info("Updating Trainee profile: {}", username);
+
+            Trainee trainee = getTraineeByUsername(username, password);
+
+            trainee.getUser().setFirstName(traineeDto.getFirstName());
+            trainee.getUser().setLastName(traineeDto.getLastName());
+            trainee.getUser().setActive(traineeDto.isActive());
+            if (traineeDto.getDateOfBirth() != null) {
+                trainee.setDateOfBirth(traineeDto.getDateOfBirth());
+            }
+            if (traineeDto.getAddress() != null) {
+                trainee.setAddress(traineeDto.getAddress());
+            }
+
+
             traineeRepository.updateTrainee(trainee);
+
+            return trainee;
         } else {
             logger.error("Invalid username or password for trainee {}", username);
             throw new SecurityException("Invalid username or password");
@@ -122,6 +143,43 @@ public class TraineeService {
             logger.error("Invalid username or password for trainee {}", username);
             throw new SecurityException("Invalid username or password");
         }
+    }
+
+    public Trainee mapToTrainee(TraineeDto traineeDto) {
+        User user = new User();
+        user.setFirstName(traineeDto.getFirstName());
+        user.setLastName(traineeDto.getLastName());
+
+        Trainee trainee = new Trainee();
+        trainee.setUser(user);
+        trainee.setDateOfBirth(traineeDto.getDateOfBirth());
+        trainee.setAddress(traineeDto.getAddress());
+
+        return trainee;
+    }
+    public TraineeDto convertToTraineeDto(Trainee trainee) {
+        TraineeDto traineeDto = new TraineeDto();
+        traineeDto.setFirstName(trainee.getUser().getFirstName());
+        traineeDto.setLastName(trainee.getUser().getLastName());
+        traineeDto.setAddress(trainee.getAddress());
+        traineeDto.setDateOfBirth(trainee.getDateOfBirth());
+        traineeDto.setActive(trainee.getUser().isActive());
+
+        List<TrainerDto> trainers = trainee.getTrainers().stream().map(trainer -> {
+            TrainerDto trainerDto = new TrainerDto();
+            trainerDto.setUserName(trainer.getUser().getUserName());
+            trainerDto.setFirstName(trainer.getUser().getFirstName());
+            trainerDto.setLastName(trainer.getUser().getLastName());
+            if (trainer.getSpecialization() != null) {
+                trainerDto.setSpecialization(trainer.getSpecialization().getTrainingTypeName());
+            } else {
+                trainerDto.setSpecialization(null);
+            }
+            return trainerDto;
+        }).collect(Collectors.toList());
+
+        traineeDto.setTrainers(trainers);
+        return traineeDto;
     }
 
 }

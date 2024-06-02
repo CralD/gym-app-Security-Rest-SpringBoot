@@ -2,9 +2,13 @@ package com.epam.gymappHibernate.services;
 
 import com.epam.gymappHibernate.dao.TraineeRepository;
 import com.epam.gymappHibernate.dao.TrainerRepository;
+import com.epam.gymappHibernate.dao.TrainingTypeRepository;
 import com.epam.gymappHibernate.dao.UserRepository;
+import com.epam.gymappHibernate.dto.TrainerDto;
 import com.epam.gymappHibernate.entity.Trainee;
 import com.epam.gymappHibernate.entity.Trainer;
+import com.epam.gymappHibernate.entity.TrainingType;
+import com.epam.gymappHibernate.entity.User;
 import com.epam.gymappHibernate.util.PasswordGenerator;
 import com.epam.gymappHibernate.util.UsernameGenerator;
 import jakarta.transaction.Transactional;
@@ -23,12 +27,15 @@ public class TrainerService {
     private final TrainerRepository trainerRepository;
     @Autowired
     private final UserRepository userRepository;
+    @Autowired
+    private TrainingTypeRepository trainingTypeRepository;
     private static final Logger logger = LoggerFactory.getLogger(TraineeService.class);
 
     @Autowired
-    public TrainerService(TrainerRepository trainerRepository, UserRepository userRepository) {
+    public TrainerService(TrainerRepository trainerRepository, UserRepository userRepository, TrainingTypeRepository trainingTypeRepository) {
         this.trainerRepository = trainerRepository;
         this.userRepository = userRepository;
+        this.trainingTypeRepository = trainingTypeRepository;
     }
 
     @Transactional
@@ -39,6 +46,15 @@ public class TrainerService {
         trainer.getUser().setUserName(username);
         String password = PasswordGenerator.generatePassword();
         trainer.getUser().setPassword(password);
+        userRepository.saveUser(trainer.getUser());
+        TrainingType existingTrainingType = trainingTypeRepository.getTrainingTypeName(trainer.getSpecialization().getTrainingTypeName());
+        if (existingTrainingType != null) {
+            trainer.setSpecialization(existingTrainingType);
+        } else {
+            throw new IllegalArgumentException("Training type does not exist");
+        }
+
+
         trainerRepository.saveTrainer(trainer);
         logger.info("Trainer created: {} ", username);
     }
@@ -112,6 +128,23 @@ public class TrainerService {
     public List<Trainer> findUnassignedTrainers(String traineeUsername) {
         logger.info("Fetching unassigned trainers for trainee: {}", traineeUsername);
         return trainerRepository.findUnassignedTrainers(traineeUsername);
+    }
+
+    public Trainer mapToTrainer(TrainerDto trainerDto) {
+        User user = new User();
+        user.setFirstName(trainerDto.getFirstName());
+        user.setLastName(trainerDto.getLastName());
+
+        Trainer trainer = new Trainer();
+        trainer.setUser(user);
+
+        if (trainerDto.getSpecialization() != null) {
+            TrainingType trainingType = new TrainingType(); // You need to fetch or create this entity
+            trainingType.setTrainingTypeName(trainerDto.getSpecialization());
+            trainer.setSpecialization(trainingType);
+        }
+
+        return trainer;
     }
 
 
