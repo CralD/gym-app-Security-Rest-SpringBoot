@@ -101,8 +101,6 @@ public class TraineeService {
             if (traineeDto.getAddress() != null) {
                 trainee.setAddress(traineeDto.getAddress());
             }
-
-
             traineeRepository.updateTrainee(trainee);
 
             return trainee;

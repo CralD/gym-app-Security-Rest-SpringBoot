@@ -70,7 +70,7 @@ public class TraineeController {
         }else {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-        
+
     }
 
 

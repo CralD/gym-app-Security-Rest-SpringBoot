@@ -4,6 +4,8 @@ import com.epam.gymappHibernate.dao.TraineeRepository;
 import com.epam.gymappHibernate.dao.TrainerRepository;
 import com.epam.gymappHibernate.dao.TrainingTypeRepository;
 import com.epam.gymappHibernate.dao.UserRepository;
+import com.epam.gymappHibernate.dto.TraineeDto;
+import com.epam.gymappHibernate.dto.TraineeDtoResponse;
 import com.epam.gymappHibernate.dto.TrainerDto;
 import com.epam.gymappHibernate.entity.Trainee;
 import com.epam.gymappHibernate.entity.Trainer;
@@ -82,10 +84,26 @@ public class TrainerService {
     }
 
     @Transactional
-    public void updateTrainerProfile(String username, String password, Trainer trainer) {
+    public Trainer updateTrainerProfile(String username, String password, TrainerDto trainerDto) {
         if (authenticate(username, password)) {
             logger.info("Updating Trainer profile: {}", username);
+
+            Trainer trainer = getTrainerByUsername(username, password);
+
+            trainer.getUser().setFirstName(trainerDto.getFirstName());
+            trainer.getUser().setLastName(trainerDto.getLastName());
+            trainer.getUser().setActive(trainerDto.isActive());
+            if (trainerDto.getSpecialization() != null) {
+                TrainingType existingTrainingType = trainingTypeRepository.getTrainingTypeName(trainerDto.getSpecialization());
+                if (existingTrainingType != null) {
+                    trainer.setSpecialization(existingTrainingType);
+                } else {
+                    throw new IllegalArgumentException("Training type does not exist");
+                }
+            }
+
             trainerRepository.updateTrainer(trainer);
+            return trainer;
         } else {
             logger.error("Invalid username or password for trainer {}", username);
             throw new SecurityException("Invalid username or password");
@@ -143,8 +161,26 @@ public class TrainerService {
             trainingType.setTrainingTypeName(trainerDto.getSpecialization());
             trainer.setSpecialization(trainingType);
         }
-
         return trainer;
+    }
+
+    public TrainerDto trainerDtoConverter (Trainer trainer){
+        TrainerDto trainerDto = new TrainerDto();
+        trainerDto.setFirstName(trainer.getUser().getFirstName());
+        trainerDto.setLastName(trainer.getUser().getLastName());
+        trainerDto.setSpecialization(trainer.getSpecialization() != null ? trainer.getSpecialization().getTrainingTypeName() : null);
+        trainerDto.setActive(trainer.getUser().isActive());
+
+        List<TraineeDtoResponse> trainees = trainer.getTrainees().stream().map(trainee -> {
+            TraineeDtoResponse traineeDto = new TraineeDtoResponse();
+            traineeDto.setUserName(trainee.getUser().getUserName());
+            traineeDto.setFirstName(trainee.getUser().getFirstName());
+            traineeDto.setLastName(trainee.getUser().getLastName());
+            return traineeDto;
+        }).collect(Collectors.toList());
+
+        trainerDto.setTrainees(trainees);
+        return trainerDto;
     }
 
 
