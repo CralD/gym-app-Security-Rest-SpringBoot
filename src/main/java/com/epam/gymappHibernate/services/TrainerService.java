@@ -7,6 +7,7 @@ import com.epam.gymappHibernate.dao.UserRepository;
 import com.epam.gymappHibernate.dto.TraineeDto;
 import com.epam.gymappHibernate.dto.TraineeDtoResponse;
 import com.epam.gymappHibernate.dto.TrainerDto;
+import com.epam.gymappHibernate.dto.TrainerDtoResponse;
 import com.epam.gymappHibernate.entity.Trainee;
 import com.epam.gymappHibernate.entity.Trainer;
 import com.epam.gymappHibernate.entity.TrainingType;
@@ -21,6 +22,8 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,13 +34,16 @@ public class TrainerService {
     private final UserRepository userRepository;
     @Autowired
     private TrainingTypeRepository trainingTypeRepository;
+    @Autowired
+    private TraineeRepository traineeRepository;
     private static final Logger logger = LoggerFactory.getLogger(TraineeService.class);
 
     @Autowired
-    public TrainerService(TrainerRepository trainerRepository, UserRepository userRepository, TrainingTypeRepository trainingTypeRepository) {
+    public TrainerService(TrainerRepository trainerRepository, UserRepository userRepository, TrainingTypeRepository trainingTypeRepository, TraineeRepository traineeRepository) {
         this.trainerRepository = trainerRepository;
         this.userRepository = userRepository;
         this.trainingTypeRepository = trainingTypeRepository;
+        this.traineeRepository = traineeRepository;
     }
 
     @Transactional
@@ -83,32 +89,32 @@ public class TrainerService {
         }
     }
 
-    @Transactional
-    public Trainer updateTrainerProfile(String username, String password, TrainerDto trainerDto) {
-        if (authenticate(username, password)) {
-            logger.info("Updating Trainer profile: {}", username);
+        @Transactional
+        public Trainer updateTrainerProfile(String username, String password, TrainerDto trainerDto) {
+            if (authenticate(username, password)) {
+                logger.info("Updating Trainer profile: {}", username);
 
-            Trainer trainer = getTrainerByUsername(username, password);
+                Trainer trainer = getTrainerByUsername(username, password);
 
-            trainer.getUser().setFirstName(trainerDto.getFirstName());
-            trainer.getUser().setLastName(trainerDto.getLastName());
-            trainer.getUser().setActive(trainerDto.isActive());
-            if (trainerDto.getSpecialization() != null) {
-                TrainingType existingTrainingType = trainingTypeRepository.getTrainingTypeName(trainerDto.getSpecialization());
-                if (existingTrainingType != null) {
-                    trainer.setSpecialization(existingTrainingType);
-                } else {
-                    throw new IllegalArgumentException("Training type does not exist");
+                trainer.getUser().setFirstName(trainerDto.getFirstName());
+                trainer.getUser().setLastName(trainerDto.getLastName());
+                trainer.getUser().setActive(trainerDto.isActive());
+                if (trainerDto.getSpecialization() != null) {
+                    TrainingType existingTrainingType = trainingTypeRepository.getTrainingTypeName(trainerDto.getSpecialization());
+                    if (existingTrainingType != null) {
+                        trainer.setSpecialization(existingTrainingType);
+                    } else {
+                        throw new IllegalArgumentException("Training type does not exist");
+                    }
                 }
-            }
 
-            trainerRepository.updateTrainer(trainer);
-            return trainer;
-        } else {
-            logger.error("Invalid username or password for trainer {}", username);
-            throw new SecurityException("Invalid username or password");
+                trainerRepository.updateTrainer(trainer);
+                return trainer;
+            } else {
+                logger.error("Invalid username or password for trainer {}", username);
+                throw new SecurityException("Invalid username or password");
+            }
         }
-    }
 
     @Transactional
     public void changeTrainerPassword(String username, String newPassword, String password) {
@@ -143,10 +149,37 @@ public class TrainerService {
         }
     }
 
-    public List<Trainer> findUnassignedTrainers(String traineeUsername) {
+    public List<TrainerDtoResponse> findUnassignedTrainers(String traineeUsername) {
         logger.info("Fetching unassigned trainers for trainee: {}", traineeUsername);
-        return trainerRepository.findUnassignedTrainers(traineeUsername);
+        List<Trainer> unassignedTrainers = trainerRepository.findUnassignedTrainers(traineeUsername);
+        return unassignedTrainers.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
+    @Transactional
+    public List<TrainerDtoResponse> updateTraineeTrainers(String traineeUsername, List<String> trainerUsernames) {
+        Trainee trainee = traineeRepository.getTraineeByUsername(traineeUsername);
+        if (trainee == null) {
+            throw new IllegalArgumentException("Trainee not found");
+        }
+
+
+       // List<Trainer> trainers = trainerRepository.getTrainerByUsername(trainerUsernames);
+        Set<Trainer> trainers = trainerUsernames.stream()
+                .map(trainerRepository::getTrainerByUsername)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (trainers.isEmpty()) {
+            throw new IllegalArgumentException("No valid trainers found for the given usernames");
+        }
+        trainee.setTrainers(trainers);
+        traineeRepository.saveTrainee(trainee);
+
+        return trainers.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
 
     public Trainer mapToTrainer(TrainerDto trainerDto) {
         User user = new User();
@@ -157,7 +190,7 @@ public class TrainerService {
         trainer.setUser(user);
 
         if (trainerDto.getSpecialization() != null) {
-            TrainingType trainingType = new TrainingType(); // You need to fetch or create this entity
+            TrainingType trainingType = new TrainingType();
             trainingType.setTrainingTypeName(trainerDto.getSpecialization());
             trainer.setSpecialization(trainingType);
         }
@@ -181,6 +214,14 @@ public class TrainerService {
 
         trainerDto.setTrainees(trainees);
         return trainerDto;
+    }
+    private TrainerDtoResponse convertToDto(Trainer trainer) {
+        TrainerDtoResponse dto = new TrainerDtoResponse();
+        dto.setUsername(trainer.getUser().getUserName());
+        dto.setFirstname(trainer.getUser().getFirstName());
+        dto.setLastname(trainer.getUser().getLastName());
+        dto.setSpecialization(trainer.getSpecialization().getTrainingTypeName());
+        return dto;
     }
 
 

@@ -8,6 +8,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public class TrainingTypeRepository {
     @PersistenceContext
@@ -27,5 +29,11 @@ public class TrainingTypeRepository {
         } catch (NoResultException e) {
             return null;
         }
+    }
+    public List<TrainingType> findAll() {
+        TypedQuery<TrainingType> query = entityManager.createQuery(
+                "SELECT t FROM TrainingType t", TrainingType.class
+        );
+        return query.getResultList();
     }
 }

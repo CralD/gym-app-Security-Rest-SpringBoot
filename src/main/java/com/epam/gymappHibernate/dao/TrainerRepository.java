@@ -45,7 +45,7 @@ public class TrainerRepository {
 
     public List<Trainer> findUnassignedTrainers(String traineeUsername) {
         String queryString = "SELECT tr FROM Trainer tr " +
-                "WHERE tr NOT IN (SELECT t.trainers FROM Trainee tn " +
+                "WHERE tr NOT IN (SELECT t FROM Trainee tn " +
                 "JOIN tn.trainers t " +
                 "JOIN tn.user u " +
                 "WHERE u.userName = :traineeUsername)";
