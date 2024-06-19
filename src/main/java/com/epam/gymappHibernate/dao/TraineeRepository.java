@@ -2,7 +2,6 @@ package com.epam.gymappHibernate.dao;
 
 
 import com.epam.gymappHibernate.entity.Trainee;
-import com.epam.gymappHibernate.services.TraineeService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;

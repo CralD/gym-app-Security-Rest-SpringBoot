@@ -4,7 +4,6 @@ import com.epam.gymappHibernate.dto.*;
 import com.epam.gymappHibernate.entity.*;
 import com.epam.gymappHibernate.exception.AuthenticationException;
 import com.epam.gymappHibernate.exception.NoTrainingsFoundException;
-import com.epam.gymappHibernate.services.TraineeService;
 import com.epam.gymappHibernate.services.TrainerService;
 import com.epam.gymappHibernate.services.TrainingService;
 import io.swagger.annotations.Api;
@@ -75,10 +74,14 @@ public class TrainerController {
             @ApiResponse(code = 404, message = "Trainer not found")
     })
     public ResponseEntity<TrainerDto> updateTraineeByUsername(@PathVariable("username")String username,@RequestParam("password") String password,@RequestBody TrainerDto trainerDto){
+        if(trainerService.authenticate(username, password)){
         Trainer trainer = trainerService.updateTrainerProfile(username, password, trainerDto);
         TrainerDto updateTrainerDto = trainerService.trainerDtoConverter(trainer);
 
         return ResponseEntity.ok(updateTrainerDto);
+        }else {
+            throw new AuthenticationException("Invalid username or password");
+        }
 
     }
     @GetMapping("/trainings")

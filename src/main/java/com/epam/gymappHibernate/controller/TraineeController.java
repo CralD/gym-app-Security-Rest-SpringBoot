@@ -84,10 +84,14 @@ public class TraineeController {
             @ApiResponse(code = 404, message = "Trainee not found")
     })
     public ResponseEntity<TraineeDto> updateTraineeByUsername(@PathVariable("username")String username,@RequestParam("password") String password,@RequestBody TraineeDto traineeDto){
+        if(traineeService.authenticate(username, password)){
         Trainee trainee = traineeService.updateTraineeProfile(username, password, traineeDto);
         TraineeDto updateTraineeDto = traineeService.convertToTraineeDto(trainee);
 
         return ResponseEntity.ok(updateTraineeDto);
+        }else {
+            throw new AuthenticationException("Invalid username or password");
+        }
 
     }
 
