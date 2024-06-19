@@ -3,6 +3,8 @@ package com.epam.gymappHibernate.controller;
 import com.epam.gymappHibernate.dao.TrainerRepository;
 import com.epam.gymappHibernate.dto.*;
 import com.epam.gymappHibernate.entity.*;
+import com.epam.gymappHibernate.exception.AuthenticationException;
+import com.epam.gymappHibernate.exception.NoTrainingsFoundException;
 import com.epam.gymappHibernate.services.TraineeService;
 import com.epam.gymappHibernate.services.TrainerService;
 import com.epam.gymappHibernate.services.TrainingService;
@@ -16,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +40,7 @@ public class TraineeController {
         this.trainingService = trainingService;
     }
 
-    @PostMapping("/register")
+    @PostMapping
     @ApiOperation(value = "Register a trainee")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Trainee registered successfully"),
@@ -64,11 +65,16 @@ public class TraineeController {
             @ApiResponse(code = 404, message = "Trainee not found")
     })
     public ResponseEntity<TraineeDto> getTraineeByUsername(@PathVariable("username") String username,@RequestParam("password") String password) {
-        Trainee trainee = traineeService.getTraineeByUsername(username,password);
-        TraineeDto traineeDto = traineeService.convertToTraineeDto(trainee);
+        try {
+            Trainee trainee = traineeService.getTraineeByUsername(username, password);
+            TraineeDto traineeDto = traineeService.convertToTraineeDto(trainee);
             return ResponseEntity.ok(traineeDto);
 
+        } catch (SecurityException e) {
+           throw new AuthenticationException("Trainee not found,invalid username or password");
+        }
     }
+
 
     @PutMapping("/{username}")
     @ApiOperation(value = "Update a trainee by username")
@@ -92,13 +98,13 @@ public class TraineeController {
             @ApiResponse(code = 401, message = "Unauthorized"),
             @ApiResponse(code = 404, message = "Trainee not found")
     })
-    public ResponseEntity<Void> deleteTraineeByUsername(@PathVariable("username")String username,@RequestParam("password") String password){
+    public ResponseEntity<?> deleteTraineeByUsername(@PathVariable("username")String username,@RequestParam("password") String password){
 
         if(traineeService.authenticate(username, password)){
             traineeService.deleteTrainee(username,password);
             return new ResponseEntity<>(HttpStatus.OK);
         }else {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            throw new AuthenticationException("Invalid username or password");
         }
 
     }
@@ -109,10 +115,13 @@ public class TraineeController {
             @ApiResponse(code = 404, message = "Trainee not found")
     })
     public ResponseEntity<List<TrainerDtoResponse>> getUnassignedTrainers(@PathVariable String username, @RequestParam("password") String password) {
+        if (!traineeService.authenticate(username, password)) {
+            throw new AuthenticationException("Invalid username or password");
+        }
         List<TrainerDtoResponse> trainers = trainerService.findUnassignedTrainers(username);
         return ResponseEntity.ok(trainers);
     }
-    @PutMapping("/updateTrainers/{username}")
+    @PutMapping("/update-trainers/{username}")
     @ApiOperation(value = "Update trainers for a trainee")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Trainers updated successfully"),
@@ -139,13 +148,16 @@ public class TraineeController {
             @RequestParam(required = false) String trainingType) {
 
         List<Training> trainings = trainingService.getTraineeTrainings(username, fromDate, toDate, trainerName, trainingType);
+        if (trainings.isEmpty()) {
+            throw new NoTrainingsFoundException("No trainings found for the specified trainee");
+        }
         List<TrainingDtoResponse> response = trainings.stream()
                 .map(trainingService::convertToDto)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(response);
     }
-    @PatchMapping("/activate/{username}")
+    @PatchMapping("/{username}")
     @ApiOperation(value = "Activate/deactivate a trainee")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Trainee activated/deactivated successfully"),
@@ -153,6 +165,9 @@ public class TraineeController {
             @ApiResponse(code = 404, message = "Trainee not found")
     })
     public ResponseEntity<Void> activateTrainee(@PathVariable("username")String username, @RequestParam String password,@RequestBody AuntheticatioDto request) {
+        if (!traineeService.authenticate(username, password)) {
+            throw new AuthenticationException("Invalid username or password");
+        }
         traineeService.setTraineeActiveStatus(username, password, request.isActive());
         return ResponseEntity.ok().build();
     }

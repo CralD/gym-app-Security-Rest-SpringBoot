@@ -2,6 +2,8 @@ package com.epam.gymappHibernate.controller;
 
 import com.epam.gymappHibernate.dto.*;
 import com.epam.gymappHibernate.entity.*;
+import com.epam.gymappHibernate.exception.AuthenticationException;
+import com.epam.gymappHibernate.exception.NoTrainingsFoundException;
 import com.epam.gymappHibernate.services.TraineeService;
 import com.epam.gymappHibernate.services.TrainerService;
 import com.epam.gymappHibernate.services.TrainingService;
@@ -56,9 +58,13 @@ public class TrainerController {
             @ApiResponse(code = 404, message = "Trainer not found")
     })
     public ResponseEntity<TrainerDto> getTraineeByUsername(@PathVariable("username") String username,@RequestParam("password") String password) {
+        try {
         Trainer trainer = trainerService.getTrainerByUsername(username,password);
         TrainerDto trainerDto = trainerService.trainerDtoConverter(trainer);
         return ResponseEntity.ok(trainerDto);
+        } catch (SecurityException e) {
+            throw new AuthenticationException("Trainer not found,invalid username or password");
+        }
 
     }
     @PutMapping("/{username}")
@@ -88,6 +94,9 @@ public class TrainerController {
             @RequestParam(required = false) String traineeName) {
 
         List<Training> trainings = trainingService.getTrainerTrainings(username, fromDate, toDate, traineeName);
+        if (trainings.isEmpty()) {
+            throw new NoTrainingsFoundException("No trainings found for the specified trainer");
+        }
         List<TrainingDtoResponse> response = trainings.stream()
                 .map(trainingService::convertToDto)
                 .collect(Collectors.toList());
@@ -103,6 +112,9 @@ public class TrainerController {
             @ApiResponse(code = 404, message = "Trainer not found")
     })
     public ResponseEntity<Void> activateTrainer(@PathVariable("username")String username, @RequestParam String password,@RequestBody AuntheticatioDto request) {
+        if (!trainerService.authenticate(username, password)) {
+            throw new AuthenticationException("Invalid username or password");
+        }
         trainerService.setTrainerActiveStatus( username, password, request.isActive());
         return ResponseEntity.ok().build();
     }

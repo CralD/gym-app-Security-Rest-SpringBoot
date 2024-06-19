@@ -7,6 +7,7 @@ import com.epam.gymappHibernate.dto.TraineeDto;
 import com.epam.gymappHibernate.dto.TrainerDto;
 import com.epam.gymappHibernate.entity.Trainee;
 import com.epam.gymappHibernate.entity.User;
+import com.epam.gymappHibernate.exception.NoTrainingsFoundException;
 import com.epam.gymappHibernate.util.PasswordGenerator;
 import com.epam.gymappHibernate.util.UsernameGenerator;
 import jakarta.transaction.Transactional;
@@ -77,8 +78,11 @@ public class TraineeService {
     public Trainee getTraineeByUsername(String username, String password) {
         if (authenticate(username, password)) {
             logger.info("Selecting Trainee profile: {}", username);
-            return traineeRepository.getTraineeByUsername(username);
-
+            Trainee trainee = traineeRepository.getTraineeByUsername(username);
+            if (trainee == null) {
+                throw new NoTrainingsFoundException("Trainee not found");
+            }
+            return trainee;
         } else {
             logger.error("Invalid username or password for trainee {}", username);
             throw new SecurityException("Invalid username or password");

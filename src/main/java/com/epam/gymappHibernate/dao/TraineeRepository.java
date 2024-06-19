@@ -44,6 +44,8 @@ public class TraineeRepository {
             Trainee trainee = query.getSingleResult();
             entityManager.remove(trainee);
             entityManager.flush();
+            entityManager.clear();
+            logger.info("Trainee with username {} deleted successfully", username);
         } catch (NoResultException e) {
             logger.error("No trainee found with username: {}", username, e);
         }

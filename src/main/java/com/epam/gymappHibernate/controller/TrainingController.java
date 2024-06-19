@@ -2,6 +2,8 @@ package com.epam.gymappHibernate.controller;
 
 import com.epam.gymappHibernate.dto.TrainingDto;
 import com.epam.gymappHibernate.dto.TrainingTypeDto;
+import com.epam.gymappHibernate.exception.InvalidTrainingDataException;
+import com.epam.gymappHibernate.exception.NoTrainingTypesFoundException;
 import com.epam.gymappHibernate.services.TrainingService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -29,10 +31,11 @@ public class TrainingController {
             @ApiResponse(code = 400, message = "Invalid training data")
     })
     public ResponseEntity<Void> addTraining(@RequestBody TrainingDto request) {
-        trainingService.addTraining(request.getTraineeUsername(), request.getTrainerUsername(), request);
-
-
-
+        try {
+            trainingService.addTraining(request.getTraineeUsername(), request.getTrainerUsername(), request);
+        } catch (Exception e) {
+            throw new InvalidTrainingDataException("Invalid training data provided");
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -44,6 +47,9 @@ public class TrainingController {
     })
     public ResponseEntity<List<TrainingTypeDto>> getTrainingTypes() {
         List<TrainingTypeDto> trainingTypes = trainingTypeService.getAllTrainingTypes();
+        if (trainingTypes.isEmpty()) {
+            throw new NoTrainingTypesFoundException("No training types found");
+        }
         return ResponseEntity.ok(trainingTypes);
     }
 

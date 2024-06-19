@@ -22,12 +22,12 @@ public class Trainee {
     private Date DateOfBirth;
     @Column(name = "ADDRESS")
     private String Address;
-    @OneToOne
+    @OneToOne(cascade = {CascadeType.REFRESH, CascadeType.REMOVE}, fetch = FetchType.EAGER)
     @JoinColumn(name = "USERID", referencedColumnName = "ID")
     private User user;
     @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Training> trainings;
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(cascade = CascadeType.REMOVE,fetch = FetchType.EAGER)
     @JoinTable(
             name = "TRAINEE_TRAINER",
             joinColumns = @JoinColumn(name = "TRAINEE_ID"),
