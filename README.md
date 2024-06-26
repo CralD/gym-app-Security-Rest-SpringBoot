@@ -1,6 +1,6 @@
-# Hibernate and Rest Gym App Created by Adán Osorio
+# Hibernate and Rest with Spring Boot Gym App Created by Adán Osorio
 
-This repository  contains a gym management application built using Hibernate and Rest. The app allows for the management of trainees, trainers, and training sessions within a gym.
+This repository  contains a gym management application built using Hibernate,Rest and Spring boot. The app allows for the management of trainees, trainers, and training sessions within a gym.
 
 ## Features
 
@@ -18,3 +18,5 @@ This repository  contains a gym management application built using Hibernate and
 - Swagger
 - Postman
 - Rest
+- -Actuator
+- -Prometheus
