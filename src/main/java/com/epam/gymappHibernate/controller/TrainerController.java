@@ -4,6 +4,7 @@ import com.epam.gymappHibernate.dto.*;
 import com.epam.gymappHibernate.entity.*;
 import com.epam.gymappHibernate.exception.AuthenticationException;
 import com.epam.gymappHibernate.exception.NoTrainingsFoundException;
+import com.epam.gymappHibernate.prometheus.TrainerMetrics;
 import com.epam.gymappHibernate.services.TrainerService;
 import com.epam.gymappHibernate.services.TrainingService;
 import io.swagger.annotations.Api;
@@ -26,10 +27,12 @@ public class TrainerController {
 
     private final TrainerService trainerService;
     private final TrainingService trainingService;
+    private final TrainerMetrics trainerMetrics;
     @Autowired
-    public TrainerController(TrainerService trainerService,TrainingService trainingService) {
+    public TrainerController(TrainerService trainerService,TrainingService trainingService,TrainerMetrics trainerMetrics) {
         this.trainerService = trainerService;
         this.trainingService = trainingService;
+        this.trainerMetrics = trainerMetrics;
     }
 
     @PostMapping("/register")
@@ -46,6 +49,7 @@ public class TrainerController {
         UserDto responseDto = new UserDto(trainerDto.getFirstName(),trainerDto.getLastName());
         responseDto.setUsername(trainer.getUser().getUserName());
         responseDto.setPassword(trainer.getUser().getPassword());
+        trainerMetrics.incrementTrainerRegistrationCounter();
 
         return ResponseEntity.ok(responseDto);
     }
@@ -57,6 +61,7 @@ public class TrainerController {
             @ApiResponse(code = 404, message = "Trainer not found")
     })
     public ResponseEntity<TrainerDto> getTraineeByUsername(@PathVariable("username") String username,@RequestParam("password") String password) {
+        trainerMetrics.incrementGetTrainerCounter();
         try {
         Trainer trainer = trainerService.getTrainerByUsername(username,password);
         TrainerDto trainerDto = trainerService.trainerDtoConverter(trainer);
@@ -74,10 +79,12 @@ public class TrainerController {
             @ApiResponse(code = 404, message = "Trainer not found")
     })
     public ResponseEntity<TrainerDto> updateTraineeByUsername(@PathVariable("username")String username,@RequestParam("password") String password,@RequestBody TrainerDto trainerDto){
+
         if(trainerService.authenticate(username, password)){
+            trainerMetrics.incrementUpdateTrainerCounter();
         Trainer trainer = trainerService.updateTrainerProfile(username, password, trainerDto);
         TrainerDto updateTrainerDto = trainerService.trainerDtoConverter(trainer);
-
+        trainerMetrics.setTrainerUpdateStatus(true);
         return ResponseEntity.ok(updateTrainerDto);
         }else {
             throw new AuthenticationException("Invalid username or password");
@@ -95,7 +102,7 @@ public class TrainerController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fromDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date toDate,
             @RequestParam(required = false) String traineeName) {
-
+        trainerMetrics.incrementGetTrainerTrainingsCounter();
         List<Training> trainings = trainingService.getTrainerTrainings(username, fromDate, toDate, traineeName);
         if (trainings.isEmpty()) {
             throw new NoTrainingsFoundException("No trainings found for the specified trainer");
@@ -115,6 +122,7 @@ public class TrainerController {
             @ApiResponse(code = 404, message = "Trainer not found")
     })
     public ResponseEntity<Void> activateTrainer(@PathVariable("username")String username, @RequestParam String password,@RequestBody AuntheticatioDto request) {
+        trainerMetrics.incrementActivateTrainerCounter();
         if (!trainerService.authenticate(username, password)) {
             throw new AuthenticationException("Invalid username or password");
         }
