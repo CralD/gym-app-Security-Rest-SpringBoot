@@ -6,13 +6,9 @@ import com.epam.gymappHibernate.entity.*;
 import com.epam.gymappHibernate.exception.AuthenticationException;
 import com.epam.gymappHibernate.exception.NoTrainingsFoundException;
 import com.epam.gymappHibernate.prometheus.TraineeMetrics;
-import com.epam.gymappHibernate.prometheus.TrainerMetrics;
 import com.epam.gymappHibernate.services.TraineeService;
 import com.epam.gymappHibernate.services.TrainerService;
 import com.epam.gymappHibernate.services.TrainingService;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -21,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -39,6 +36,8 @@ public class TraineeController {
     private final TrainerRepository trainerRepository;
 
     private final TraineeMetrics traineeMetrics;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     public TraineeController(TraineeService traineeService, TrainerRepository trainerRepository, TrainerService trainerService, TrainingService trainingService, TraineeMetrics traineeMetrics) {
@@ -58,13 +57,13 @@ public class TraineeController {
             @ApiResponse(code = 400, message = "Invalid trainee data")
     })
     public ResponseEntity<UserDto> RegisterTrainee(@RequestBody TraineeDto request){
-        Trainee trainee = traineeService.mapToTrainee(request);
 
-        traineeService.createTrainee(trainee);
+
+        CredentialsDto credentialsDto = traineeService.createTrainee(request);
 
        UserDto responseDTO = new UserDto(request.getFirstName(), request.getLastName());
-        responseDTO.setUsername(trainee.getUser().getUserName());
-        responseDTO.setPassword(trainee.getUser().getPassword());
+        responseDTO.setUsername(credentialsDto.getUsername());
+        responseDTO.setPassword(credentialsDto.getPassword());
         traineeMetrics.incrementTraineeRegistrationCounter();
         return ResponseEntity.ok(responseDTO);
     }
@@ -78,7 +77,7 @@ public class TraineeController {
     public ResponseEntity<TraineeDto> getTraineeByUsername(@PathVariable("username") String username,@RequestParam("password") String password) {
         traineeMetrics.incrementGetTraineeCounter();
         try {
-            Trainee trainee = traineeService.getTraineeByUsername(username, password);
+            Trainee trainee = traineeService.getTraineeByUsername(username);
             TraineeDto traineeDto = traineeService.convertToTraineeDto(trainee);
             return ResponseEntity.ok(traineeDto);
 
@@ -97,15 +96,13 @@ public class TraineeController {
     })
     public ResponseEntity<TraineeDto> updateTraineeByUsername(@PathVariable("username")String username,@RequestParam("password") String password,@RequestBody TraineeDto traineeDto){
 
-        if(traineeService.authenticate(username, password)){
+
             traineeMetrics.incrementUpdateTraineeCounter();
         Trainee trainee = traineeService.updateTraineeProfile(username, password, traineeDto);
         TraineeDto updateTraineeDto = traineeService.convertToTraineeDto(trainee);
 
         return ResponseEntity.ok(updateTraineeDto);
-        }else {
-            throw new AuthenticationException("Invalid username or password");
-        }
+
 
     }
 
@@ -118,14 +115,12 @@ public class TraineeController {
     })
     public ResponseEntity<?> deleteTraineeByUsername(@PathVariable("username")String username,@RequestParam("password") String password){
 
-        if(traineeService.authenticate(username, password)){
+
 
             traineeService.deleteTrainee(username,password);
             traineeMetrics.incrementDeleteTraineeCounter();
             return new ResponseEntity<>(HttpStatus.OK);
-        }else {
-            throw new AuthenticationException("Invalid username or password");
-        }
+
 
     }
     @GetMapping("/unassigned/{username}")
@@ -135,9 +130,8 @@ public class TraineeController {
             @ApiResponse(code = 404, message = "Trainee not found")
     })
     public ResponseEntity<List<TrainerDtoResponse>> getUnassignedTrainers(@PathVariable String username, @RequestParam("password") String password) {
-        if (!traineeService.authenticate(username, password)) {
-            throw new AuthenticationException("Invalid username or password");
-        }
+
+
         traineeMetrics.incrementGetUnassignedTrainersCounter();
         List<TrainerDtoResponse> trainers = trainerService.findUnassignedTrainers(username);
         return ResponseEntity.ok(trainers);
@@ -186,12 +180,10 @@ public class TraineeController {
             @ApiResponse(code = 400, message = "Invalid request"),
             @ApiResponse(code = 404, message = "Trainee not found")
     })
-    public ResponseEntity<Void> activateTrainee(@PathVariable("username")String username, @RequestParam String password,@RequestBody AuntheticatioDto request) {
-        if (!traineeService.authenticate(username, password)) {
-            throw new AuthenticationException("Invalid username or password");
-        }
+    public ResponseEntity<Void> activateTrainee(@PathVariable("username")String username, @RequestParam String password,@RequestParam("isActive") boolean isActive) {
+
         traineeMetrics.incrementActivateTraineeCounter();
-        traineeService.setTraineeActiveStatus(username, password, request.isActive());
+        traineeService.setTraineeActiveStatus(username, password, isActive);
         return ResponseEntity.ok().build();
     }
 

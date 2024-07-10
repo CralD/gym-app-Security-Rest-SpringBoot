@@ -51,7 +51,7 @@ class TrainerServiceTest {
     @Test
     public void testCreateTrainer() {
         when(userRepository.getAllUsers()).thenReturn(Collections.singletonList("existingUser"));
-        trainerService.createTrainer(trainer);
+        trainerService.createTrainer(trainerDto);
         assertNotNull(trainer.getUser().getUserName());
         assertNotNull(trainer.getUser().getPassword());
         verify(trainerRepository, times(1)).saveTrainer(trainer);

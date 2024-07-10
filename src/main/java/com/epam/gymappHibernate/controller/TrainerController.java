@@ -43,12 +43,12 @@ public class TrainerController {
     })
     public ResponseEntity<UserDto> saveTrainerByUsername(@RequestBody TrainerDto trainerDto) {
 
-        Trainer trainer = trainerService.mapToTrainer(trainerDto);
-        trainerService.createTrainer(trainer);
+
+        CredentialsDto credentialsDto = trainerService.createTrainer(trainerDto);
 
         UserDto responseDto = new UserDto(trainerDto.getFirstName(),trainerDto.getLastName());
-        responseDto.setUsername(trainer.getUser().getUserName());
-        responseDto.setPassword(trainer.getUser().getPassword());
+        responseDto.setUsername(credentialsDto.getUsername());
+        responseDto.setPassword(credentialsDto.getPassword());
         trainerMetrics.incrementTrainerRegistrationCounter();
 
         return ResponseEntity.ok(responseDto);
@@ -80,15 +80,13 @@ public class TrainerController {
     })
     public ResponseEntity<TrainerDto> updateTraineeByUsername(@PathVariable("username")String username,@RequestParam("password") String password,@RequestBody TrainerDto trainerDto){
 
-        if(trainerService.authenticate(username, password)){
+
             trainerMetrics.incrementUpdateTrainerCounter();
         Trainer trainer = trainerService.updateTrainerProfile(username, password, trainerDto);
         TrainerDto updateTrainerDto = trainerService.trainerDtoConverter(trainer);
         trainerMetrics.setTrainerUpdateStatus(true);
         return ResponseEntity.ok(updateTrainerDto);
-        }else {
-            throw new AuthenticationException("Invalid username or password");
-        }
+
 
     }
     @GetMapping("/trainings")
@@ -121,12 +119,12 @@ public class TrainerController {
             @ApiResponse(code = 400, message = "Invalid request"),
             @ApiResponse(code = 404, message = "Trainer not found")
     })
-    public ResponseEntity<Void> activateTrainer(@PathVariable("username")String username, @RequestParam String password,@RequestBody AuntheticatioDto request) {
+    public ResponseEntity<Void> activateTrainer(@PathVariable("username")String username, @RequestParam String password,@RequestParam("isActive") boolean isActive) {
         trainerMetrics.incrementActivateTrainerCounter();
-        if (!trainerService.authenticate(username, password)) {
-            throw new AuthenticationException("Invalid username or password");
-        }
-        trainerService.setTrainerActiveStatus( username, password, request.isActive());
+
+
+        trainerService.setTrainerActiveStatus(username, password, isActive);
+        trainerMetrics.setTrainerUpdateStatus(true);
         return ResponseEntity.ok().build();
     }
 

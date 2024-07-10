@@ -54,7 +54,7 @@ class TraineeServiceTest {
     @Test
     public void testCreateTrainee() {
         when(userRepository.getAllUsers()).thenReturn(Collections.singletonList("existingUser"));
-        traineeService.createTrainee(trainee);
+        traineeService.createTrainee(traineeDto);
         assertNotNull(trainee.getUser().getUserName());
         assertNotNull(trainee.getUser().getPassword());
         verify(traineeRepository, times(1)).saveTrainee(trainee);

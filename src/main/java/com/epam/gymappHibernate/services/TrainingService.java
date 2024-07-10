@@ -56,6 +56,7 @@ public class TrainingService {
         training.setTrainingName(request.getTrainingName());
         training.setTrainingDate(request.getTrainingDate());
         training.setTrainingDuration(request.getTrainingDuration());
+        training.setTrainingType(trainer.getSpecialization());
         training.setTrainee(trainee);
         training.setTrainer(trainer);
 
