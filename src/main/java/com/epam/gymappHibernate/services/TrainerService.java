@@ -82,7 +82,7 @@ public class TrainerService {
         }
     }
 
-    public Trainer getTrainerByUsername(String username, String password) {
+    public Trainer getTrainerByUsername(String username) {
 
             logger.info("Selecting Trainer profile: {}", username);
             return trainerRepository.getTrainerByUsername(username);
@@ -91,12 +91,11 @@ public class TrainerService {
     }
 
         @Transactional
-        public Trainer updateTrainerProfile(String username, String password, TrainerDto trainerDto) {
+        public Trainer updateTrainerProfile(String username, TrainerDto trainerDto) {
 
                 logger.info("Updating Trainer profile: {}", username);
 
-                Trainer trainer = getTrainerByUsername(username, password);
-            System.out.println(trainer.getUser().getUserName() + "viendo si existe el trainer");
+                Trainer trainer = getTrainerByUsername(username);
 
                 trainer.getUser().setFirstName(trainerDto.getFirstName());
                 trainer.getUser().setLastName(trainerDto.getLastName());
@@ -116,10 +115,11 @@ public class TrainerService {
         }
 
     @Transactional
-    public void setTrainerActiveStatus(String username, String password,  boolean isActive) {
+    public void setTrainerActiveStatus(String username, boolean isActive) {
         logger.info("Setting active status for trainer: {}", username);
 
         Trainer trainer = trainerRepository.getTrainerByUsername(username);
+
 
         if (trainer != null) {
 

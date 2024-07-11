@@ -71,7 +71,7 @@ public class TraineeService {
     }
 
     @Transactional
-    public void deleteTrainee(String username, String password) {
+    public void deleteTrainee(String username) {
 
             traineeRepository.deleteTraineeByUsername(username);
             logger.info("Deleted trainee: {}", username);
@@ -94,8 +94,8 @@ public class TraineeService {
     }
 
     @Transactional
-    public Trainee updateTraineeProfile(String username, String password, TraineeDto traineeDto) {
-        if (authenticate(username, password)) {
+    public Trainee updateTraineeProfile(String username, TraineeDto traineeDto) {
+
             logger.info("Updating Trainee profile: {}", username);
 
             Trainee trainee = getTraineeByUsername(username);
@@ -112,10 +112,7 @@ public class TraineeService {
             traineeRepository.updateTrainee(trainee);
 
             return trainee;
-        } else {
-            logger.error("Invalid username or password for trainee {}", username);
-            throw new SecurityException("Invalid username or password");
-        }
+
     }
 
     @Transactional
@@ -134,7 +131,7 @@ public class TraineeService {
     }
 
     @Transactional
-    public void setTraineeActiveStatus(String username, String password, boolean isActive) {
+    public void setTraineeActiveStatus(String username, boolean isActive) {
         logger.info("Setting active status for trainee: {}", username);
 
             Trainee trainee = traineeRepository.getTraineeByUsername(username);

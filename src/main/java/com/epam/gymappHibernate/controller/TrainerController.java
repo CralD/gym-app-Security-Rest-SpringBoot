@@ -63,7 +63,7 @@ public class TrainerController {
     public ResponseEntity<TrainerDto> getTraineeByUsername(@PathVariable("username") String username,@RequestParam("password") String password) {
         trainerMetrics.incrementGetTrainerCounter();
         try {
-        Trainer trainer = trainerService.getTrainerByUsername(username,password);
+        Trainer trainer = trainerService.getTrainerByUsername(username);
         TrainerDto trainerDto = trainerService.trainerDtoConverter(trainer);
         return ResponseEntity.ok(trainerDto);
         } catch (SecurityException e) {
@@ -82,7 +82,7 @@ public class TrainerController {
 
 
             trainerMetrics.incrementUpdateTrainerCounter();
-        Trainer trainer = trainerService.updateTrainerProfile(username, password, trainerDto);
+        Trainer trainer = trainerService.updateTrainerProfile(username, trainerDto);
         TrainerDto updateTrainerDto = trainerService.trainerDtoConverter(trainer);
         trainerMetrics.setTrainerUpdateStatus(true);
         return ResponseEntity.ok(updateTrainerDto);
@@ -119,11 +119,11 @@ public class TrainerController {
             @ApiResponse(code = 400, message = "Invalid request"),
             @ApiResponse(code = 404, message = "Trainer not found")
     })
-    public ResponseEntity<Void> activateTrainer(@PathVariable("username")String username, @RequestParam String password,@RequestParam("isActive") boolean isActive) {
+    public ResponseEntity<Void> activateTrainer(@PathVariable("username")String username,@RequestParam("isActive") boolean isActive) {
         trainerMetrics.incrementActivateTrainerCounter();
 
 
-        trainerService.setTrainerActiveStatus(username, password, isActive);
+        trainerService.setTrainerActiveStatus(username, isActive);
         trainerMetrics.setTrainerUpdateStatus(true);
         return ResponseEntity.ok().build();
     }

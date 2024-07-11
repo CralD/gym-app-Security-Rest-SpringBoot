@@ -2,15 +2,22 @@ package com.epam.gymappHibernate.services;
 
 import com.epam.gymappHibernate.dao.TraineeRepository;
 import com.epam.gymappHibernate.dao.UserRepository;
+import com.epam.gymappHibernate.dto.CredentialsDto;
 import com.epam.gymappHibernate.dto.TraineeDto;
 import com.epam.gymappHibernate.entity.Trainee;
 import com.epam.gymappHibernate.entity.User;
+import com.epam.gymappHibernate.exception.NoTrainingsFoundException;
+import com.epam.gymappHibernate.util.PasswordGenerator;
+import com.epam.gymappHibernate.util.UsernameGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.ArrayList;
@@ -34,6 +41,9 @@ class TraineeServiceTest {
     @InjectMocks
     private TraineeService traineeService;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private Trainee trainee;
 
     private TraineeDto traineeDto;
@@ -51,14 +61,7 @@ class TraineeServiceTest {
         trainee.setUser(user);
     }
 
-    @Test
-    public void testCreateTrainee() {
-        when(userRepository.getAllUsers()).thenReturn(Collections.singletonList("existingUser"));
-        traineeService.createTrainee(traineeDto);
-        assertNotNull(trainee.getUser().getUserName());
-        assertNotNull(trainee.getUser().getPassword());
-        verify(traineeRepository, times(1)).saveTrainee(trainee);
-    }
+
 
     @Test
     public void testAuthenticateSuccess() {
@@ -79,6 +82,8 @@ class TraineeServiceTest {
         assertFalse(result);
     }
 
+
+
     @Test
     public void testAuthenticateUserNotFound() {
         String username = "unknown";
@@ -94,18 +99,19 @@ class TraineeServiceTest {
         String password = "password";
         when(traineeRepository.getTraineeByUsername(username)).thenReturn(trainee);
         trainee.getUser().setPassword(password);
-        traineeService.deleteTrainee(username, password);
+        traineeService.deleteTrainee(username);
         verify(traineeRepository, times(1)).deleteTraineeByUsername(username);
     }
 
     @Test
     public void testDeleteTraineeFailure() {
         String username = "johndoe";
-        String password = "wrongpassword";
-        when(traineeRepository.getTraineeByUsername(username)).thenReturn(trainee);
-        trainee.getUser().setPassword("password");
+
+        doThrow(new SecurityException("Not allowed to delete this trainee.")).when(traineeRepository).deleteTraineeByUsername(username);
+
+
         assertThrows(SecurityException.class, () -> {
-            traineeService.deleteTrainee(username, password);
+            traineeService.deleteTrainee(username);
         });
     }
 
@@ -115,18 +121,18 @@ class TraineeServiceTest {
         String password = "password";
         when(traineeRepository.getTraineeByUsername(username)).thenReturn(trainee);
         trainee.getUser().setPassword(password);
-        Trainee result = traineeService.getTraineeByUsername(username, password);
+        Trainee result = traineeService.getTraineeByUsername(username);
         assertEquals(trainee, result);
     }
 
     @Test
     public void testGetTraineeByUsernameFailure() {
         String username = "johndoe";
-        String password = "wrongpassword";
-        when(traineeRepository.getTraineeByUsername(username)).thenReturn(trainee);
-        trainee.getUser().setPassword("password");
-        assertThrows(SecurityException.class, () -> {
-            traineeService.getTraineeByUsername(username, password);
+
+        when(traineeRepository.getTraineeByUsername(username)).thenReturn(null);
+
+        assertThrows(NoTrainingsFoundException.class, () -> {
+            traineeService.getTraineeByUsername(username);
         });
     }
 
@@ -143,21 +149,25 @@ class TraineeServiceTest {
         traineeDto.setActive(true);
         when(traineeRepository.getTraineeByUsername(username)).thenReturn(trainee);
         trainee.getUser().setPassword(password);
-        traineeService.updateTraineeProfile(username, password, traineeDto);
+        traineeService.updateTraineeProfile(username, traineeDto);
         verify(traineeRepository, times(1)).updateTrainee(trainee);
     }
 
     @Test
     public void testUpdateTraineeProfileFailure() {
         String username = "johndoe";
-        String password = "wrongpassword";
-        when(traineeRepository.getTraineeByUsername(username)).thenReturn(trainee);
-        trainee.getUser().setPassword("password");
-        assertThrows(SecurityException.class, () -> {
-            traineeService.updateTraineeProfile(username, password, traineeDto);
+        TraineeDto traineeDto = new TraineeDto();
+        traineeDto.setFirstName("John");
+        traineeDto.setLastName("Doe");
+        traineeDto.setActive(true);
+
+
+        when(traineeRepository.getTraineeByUsername(username)).thenReturn(null);
+
+        assertThrows(NoTrainingsFoundException.class, () -> {
+            traineeService.updateTraineeProfile(username, traineeDto);
         });
     }
-
     @Test
     public void testChangeTraineePasswordSuccess() {
         String username = "Pedro.Garcia";
@@ -189,7 +199,7 @@ class TraineeServiceTest {
         boolean isActive = true;
         when(traineeRepository.getTraineeByUsername(username)).thenReturn(trainee);
         trainee.getUser().setPassword(password);
-        traineeService.setTraineeActiveStatus(username, password, isActive);
+        traineeService.setTraineeActiveStatus(username, isActive);
         assertEquals(isActive, trainee.getUser().isActive());
         verify(traineeRepository, times(1)).updateTrainee(trainee);
     }
@@ -197,12 +207,17 @@ class TraineeServiceTest {
     @Test
     public void testSetTraineeActiveStatusFailure() {
         String username = "johndoe";
-        String password = "wrongpassword";
         boolean isActive = true;
+
         when(traineeRepository.getTraineeByUsername(username)).thenReturn(trainee);
-        trainee.getUser().setPassword("password");
+
+
+        doThrow(new SecurityException("Cannot set active status for this trainee."))
+                .when(traineeRepository).updateTrainee(trainee);
+
+
         assertThrows(SecurityException.class, () -> {
-            traineeService.setTraineeActiveStatus(username, password, isActive);
+            traineeService.setTraineeActiveStatus(username, isActive);
         });
     }
 

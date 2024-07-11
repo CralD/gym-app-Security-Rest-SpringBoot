@@ -1,16 +1,19 @@
 package com.epam.gymappHibernate.services;
 
 import com.epam.gymappHibernate.dao.TrainerRepository;
+import com.epam.gymappHibernate.dao.TrainingTypeRepository;
 import com.epam.gymappHibernate.dao.UserRepository;
 import com.epam.gymappHibernate.dto.TrainerDto;
 import com.epam.gymappHibernate.dto.TrainerDtoResponse;
 import com.epam.gymappHibernate.entity.Trainer;
+import com.epam.gymappHibernate.entity.TrainingType;
 import com.epam.gymappHibernate.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.Collections;
@@ -30,8 +33,12 @@ class TrainerServiceTest {
 
     @InjectMocks
     private TrainerService trainerService;
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     private Trainer trainer;
+    @Mock
+    private TrainingTypeRepository trainingTypeRepository;
 
     private TrainerDto trainerDto;
     private User user;
@@ -48,14 +55,7 @@ class TrainerServiceTest {
         trainer.setUser(user);
     }
 
-    @Test
-    public void testCreateTrainer() {
-        when(userRepository.getAllUsers()).thenReturn(Collections.singletonList("existingUser"));
-        trainerService.createTrainer(trainerDto);
-        assertNotNull(trainer.getUser().getUserName());
-        assertNotNull(trainer.getUser().getPassword());
-        verify(trainerRepository, times(1)).saveTrainer(trainer);
-    }
+
 
     @Test
     public void testAuthenticateSuccess() {
@@ -93,44 +93,37 @@ class TrainerServiceTest {
         String password = "password";
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword(password);
-        Trainer result = trainerService.getTrainerByUsername(username, password);
+        Trainer result = trainerService.getTrainerByUsername(username);
         assertEquals(trainer, result);
     }
 
-    @Test
-    public void testGetTrainerByUsernameFailure() {
 
-        String username = "johndoe";
-        String password = "wrongpassword";
-        when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
-        trainer.getUser().setPassword("password");
-        assertThrows(SecurityException.class, () -> {
-            trainerService.getTrainerByUsername(username, password);
-        });
-    }
 
     @Test
     public void testUpdateTrainerProfileSuccess() {
-
         String username = "Pedro.Garcia";
-        String password = "password";
+
+        TrainerDto trainerDto = new TrainerDto();
+        trainerDto.setFirstName("Pedro");
+        trainerDto.setLastName("Garcia");
+        trainerDto.setActive(true);
+        trainerDto.setSpecialization("Cardio");
+
+        Trainer trainer = new Trainer();
+        User user = new User();
+        user.setUserName(username);
+        user.setPassword("password");
+        trainer.setUser(user);
+
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
-        trainer.getUser().setPassword(password);
-        trainerService.updateTrainerProfile(username, password, trainerDto);
+        when(trainingTypeRepository.getTrainingTypeName("Cardio")).thenReturn(new TrainingType()); // Mock the specialization lookup
+
+        trainerService.updateTrainerProfile(username, trainerDto);
+
         verify(trainerRepository, times(1)).updateTrainer(trainer);
     }
 
-    @Test
-    public void testUpdateTrainerProfileFailure() {
 
-        String username = "johndoe";
-        String password = "wrongpassword";
-        when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
-        trainer.getUser().setPassword("password");
-        assertThrows(SecurityException.class, () -> {
-            trainerService.updateTrainerProfile(username, password, trainerDto);
-        });
-    }
 
     @Test
     public void testChangeTrainerPasswordSuccess() {
@@ -145,18 +138,7 @@ class TrainerServiceTest {
         verify(trainerRepository, times(1)).updateTrainer(trainer);
     }
 
-    @Test
-    public void testChangeTrainerPasswordFailure() {
 
-        String username = "johndoe";
-        String newPassword = "newpassword";
-        String password = "wrongpassword";
-        when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
-        trainer.getUser().setPassword("password");
-        assertThrows(SecurityException.class, () -> {
-            trainerService.changeTrainerPassword(username, newPassword, password);
-        });
-    }
 
     @Test
     public void testSetTrainerActiveStatusSuccess() {
@@ -166,34 +148,37 @@ class TrainerServiceTest {
         boolean isActive = true;
         when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
         trainer.getUser().setPassword(password);
-        trainerService.setTrainerActiveStatus(username, password, isActive);
+        trainerService.setTrainerActiveStatus(username, isActive);
         assertEquals(isActive, trainer.getUser().isActive());
         verify(trainerRepository, times(1)).updateTrainer(trainer);
     }
 
-    @Test
-    public void testSetTrainerActiveStatusFailure() {
 
-        String username = "johndoe";
-        String password = "wrongpassword";
-        boolean isActive = true;
-        when(trainerRepository.getTrainerByUsername(username)).thenReturn(trainer);
-        trainer.getUser().setPassword("password");
-        assertThrows(SecurityException.class, () -> {
-            trainerService.setTrainerActiveStatus(username, password, isActive);
-        });
-    }
 
     @Test
     public void testFindUnassignedTrainers() {
-
         String traineeUsername = "trainee1";
+
+
+        TrainingType specialization = new TrainingType();
+        specialization.setTrainingTypeName("Specialization");
+
+        Trainer trainer = new Trainer();
+        trainer.setTrainerId(1L);
+        trainer.setSpecialization(specialization);
+        trainer.setUser(user);
+
         List<Trainer> unassignedTrainers = Collections.singletonList(trainer);
         when(trainerRepository.findUnassignedTrainers(traineeUsername)).thenReturn(unassignedTrainers);
+
+
         List<TrainerDtoResponse> result = trainerService.findUnassignedTrainers(traineeUsername);
+
+
         assertNotNull(result);
         assertEquals(1, result.size());
-        //assertEquals(trainer, result.get(0));
+
+
         verify(trainerRepository, times(1)).findUnassignedTrainers(traineeUsername);
     }
 

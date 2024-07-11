@@ -4,14 +4,12 @@ import com.epam.gymappHibernate.dao.TraineeRepository;
 import com.epam.gymappHibernate.dao.UserRepository;
 
 import com.epam.gymappHibernate.dto.AuthRequest;
-import com.epam.gymappHibernate.entity.User;
 import com.epam.gymappHibernate.services.LoginAttemptService;
 import com.epam.gymappHibernate.services.SecurityService;
+import com.epam.gymappHibernate.services.TokenBlacklistService;
 import com.epam.gymappHibernate.util.JwtUtil;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +19,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,6 +43,9 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private LoginAttemptService loginAttemptService;
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
+
 
 
 
@@ -80,14 +81,16 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser(HttpServletRequest request, HttpServletResponse response) {
-        SecurityContextHolder.clearContext();
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String jwt = authorizationHeader.substring(7);
+            tokenBlacklistService.addToBlacklist(jwt);
         }
-        for (Cookie cookie : request.getCookies()) {
-            cookie.setMaxAge(0);
-        }
-        return ResponseEntity.ok("Logged out successfully");
+
+
+
+        return ResponseEntity.ok().body("Logged out successfully");
     }
+
 }
+

@@ -1,5 +1,6 @@
 package com.epam.gymappHibernate.config;
 import com.epam.gymappHibernate.services.SecurityService;
+import com.epam.gymappHibernate.services.TokenBlacklistService;
 import com.epam.gymappHibernate.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -25,10 +26,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
     private SecurityService customUserDetailsService;
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+
 
         final String authorizationHeader = request.getHeader("Authorization");
 
@@ -37,6 +42,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
+            if (tokenBlacklistService.isTokenBlacklisted(jwt)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is blacklisted");
+                return;
+            }
             username = jwtUtil.extractUsername(jwt);
         }
 

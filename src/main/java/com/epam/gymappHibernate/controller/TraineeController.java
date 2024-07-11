@@ -74,7 +74,7 @@ public class TraineeController {
             @ApiResponse(code = 200, message = "Trainee found"),
             @ApiResponse(code = 404, message = "Trainee not found")
     })
-    public ResponseEntity<TraineeDto> getTraineeByUsername(@PathVariable("username") String username,@RequestParam("password") String password) {
+    public ResponseEntity<TraineeDto> getTraineeByUsername(@PathVariable("username") String username) {
         traineeMetrics.incrementGetTraineeCounter();
         try {
             Trainee trainee = traineeService.getTraineeByUsername(username);
@@ -94,11 +94,11 @@ public class TraineeController {
             @ApiResponse(code = 400, message = "Invalid trainee data"),
             @ApiResponse(code = 404, message = "Trainee not found")
     })
-    public ResponseEntity<TraineeDto> updateTraineeByUsername(@PathVariable("username")String username,@RequestParam("password") String password,@RequestBody TraineeDto traineeDto){
+    public ResponseEntity<TraineeDto> updateTraineeByUsername(@PathVariable("username")String username,@RequestBody TraineeDto traineeDto){
 
 
             traineeMetrics.incrementUpdateTraineeCounter();
-        Trainee trainee = traineeService.updateTraineeProfile(username, password, traineeDto);
+        Trainee trainee = traineeService.updateTraineeProfile(username, traineeDto);
         TraineeDto updateTraineeDto = traineeService.convertToTraineeDto(trainee);
 
         return ResponseEntity.ok(updateTraineeDto);
@@ -113,11 +113,11 @@ public class TraineeController {
             @ApiResponse(code = 401, message = "Unauthorized"),
             @ApiResponse(code = 404, message = "Trainee not found")
     })
-    public ResponseEntity<?> deleteTraineeByUsername(@PathVariable("username")String username,@RequestParam("password") String password){
+    public ResponseEntity<?> deleteTraineeByUsername(@PathVariable("username")String username){
 
 
 
-            traineeService.deleteTrainee(username,password);
+            traineeService.deleteTrainee(username);
             traineeMetrics.incrementDeleteTraineeCounter();
             return new ResponseEntity<>(HttpStatus.OK);
 
@@ -180,10 +180,10 @@ public class TraineeController {
             @ApiResponse(code = 400, message = "Invalid request"),
             @ApiResponse(code = 404, message = "Trainee not found")
     })
-    public ResponseEntity<Void> activateTrainee(@PathVariable("username")String username, @RequestParam String password,@RequestParam("isActive") boolean isActive) {
+    public ResponseEntity<Void> activateTrainee(@PathVariable("username")String username,@RequestParam("isActive") boolean isActive) {
 
         traineeMetrics.incrementActivateTraineeCounter();
-        traineeService.setTraineeActiveStatus(username, password, isActive);
+        traineeService.setTraineeActiveStatus(username, isActive);
         return ResponseEntity.ok().build();
     }
 
