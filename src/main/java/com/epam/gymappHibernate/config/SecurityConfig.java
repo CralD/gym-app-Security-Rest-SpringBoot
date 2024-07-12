@@ -2,11 +2,9 @@ package com.epam.gymappHibernate.config;
 
 
 import com.epam.gymappHibernate.services.SecurityService;
-import com.epam.gymappHibernate.services.TokenBlacklistService;
+import com.epam.gymappHibernate.services.TokenInvalidationService;
 import com.epam.gymappHibernate.util.JwtUtil;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,21 +32,24 @@ import java.util.Arrays;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    @Autowired
+
     private SecurityService customUserDetailsService;
 
-    @Autowired
     private JwtUtil jwtUtil;
-    @Autowired
-    private TokenBlacklistService tokenBlacklistService;
+
+    private TokenInvalidationService tokenInvalidationService;
 
 
+    public SecurityConfig(SecurityService customUserDetailsService, JwtUtil jwtUtil, TokenInvalidationService tokenInvalidationService) {
+        this.customUserDetailsService = customUserDetailsService;
+        this.jwtUtil = jwtUtil;
+        this.tokenInvalidationService = tokenInvalidationService;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 
 
     @Bean
@@ -69,7 +70,7 @@ public class SecurityConfig {
                             SecurityContextHolder.clearContext();
 
                             response.setStatus(HttpServletResponse.SC_OK);
-                        })) ;
+                        }));
 
         http.addFilterBefore(jwtRequestFilter(), UsernamePasswordAuthenticationFilter.class);
         http.headers().frameOptions().disable();
@@ -81,7 +82,7 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET","POST","PATCH"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PATCH"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -90,6 +91,6 @@ public class SecurityConfig {
 
     @Bean
     public JwtRequestFilter jwtRequestFilter() {
-        return new JwtRequestFilter(jwtUtil, customUserDetailsService,tokenBlacklistService);
+        return new JwtRequestFilter(jwtUtil, customUserDetailsService, tokenInvalidationService);
     }
 }

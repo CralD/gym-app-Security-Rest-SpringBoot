@@ -6,7 +6,7 @@ import com.epam.gymappHibernate.dao.UserRepository;
 import com.epam.gymappHibernate.dto.AuthRequest;
 import com.epam.gymappHibernate.services.LoginAttemptService;
 import com.epam.gymappHibernate.services.SecurityService;
-import com.epam.gymappHibernate.services.TokenBlacklistService;
+import com.epam.gymappHibernate.services.TokenInvalidationService;
 import com.epam.gymappHibernate.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,10 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,27 +30,32 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    @Autowired
+
     private AuthenticationManager authenticationManager;
-    @Autowired
+
     private SecurityService userDetailsService;
-    @Autowired
+
     private UserRepository userRepository;
 
-    @Autowired
     private PasswordEncoder passwordEncoder;
-    @Autowired
+
     private LoginAttemptService loginAttemptService;
-    @Autowired
-    private TokenBlacklistService tokenBlacklistService;
 
+    private TokenInvalidationService tokenInvalidationService;
 
-
-
-    @Autowired
     private JwtUtil jwtUtil;
     private static final Logger logger = LoggerFactory.getLogger(TraineeRepository.class);
 
+
+    public AuthController(AuthenticationManager authenticationManager, SecurityService userDetailsService, UserRepository userRepository, PasswordEncoder passwordEncoder, LoginAttemptService loginAttemptService, TokenInvalidationService tokenInvalidationService, JwtUtil jwtUtil) {
+        this.authenticationManager = authenticationManager;
+        this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.loginAttemptService = loginAttemptService;
+        this.tokenInvalidationService = tokenInvalidationService;
+        this.jwtUtil = jwtUtil;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody AuthRequest authenticationRequest) throws Exception {
@@ -63,9 +66,9 @@ public class AuthController {
         }
 
         try {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
-        );
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
+            );
             loginAttemptService.loginSucceeded(username);
         } catch (Exception e) {
             loginAttemptService.loginFailed(username);
@@ -84,9 +87,8 @@ public class AuthController {
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String jwt = authorizationHeader.substring(7);
-            tokenBlacklistService.addToBlacklist(jwt);
+            tokenInvalidationService.addToBlacklist(jwt);
         }
-
 
 
         return ResponseEntity.ok().body("Logged out successfully");
