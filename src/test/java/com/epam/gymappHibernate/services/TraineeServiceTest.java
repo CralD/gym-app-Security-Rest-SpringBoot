@@ -29,7 +29,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@TestPropertySource(properties = "spring.datasource.url=jdbc:h2:mem:testdb5")
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb5",
+        "some.encrypted.property=plainTextValue"
+})
 class TraineeServiceTest {
 
     @Mock
